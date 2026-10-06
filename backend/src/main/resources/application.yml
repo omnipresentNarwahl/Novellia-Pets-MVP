@@ -1,0 +1,12 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+app:
+  # Load a few demo pets and records at startup when the store is empty.
+  seed-demo-data: ${APP_SEED_DEMO_DATA:true}
+  # Zone used to decide what "today" is for the no-future-dates rules. Blank means the JVM default.
+  timezone: ${APP_TIMEZONE:}
+
+spring:
+  application:
+    name: novellia-pets-api

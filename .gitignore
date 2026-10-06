@@ -1,0 +1,13 @@
+# Backend
+backend/target/
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+# Optional JSON snapshots (see DECISIONS.md)
+data/
+# Editors and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
