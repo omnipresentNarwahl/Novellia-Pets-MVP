@@ -1,0 +1,92 @@
+<div class="page-header">
+  <h1>Pets</h1>
+  <a mat-flat-button routerLink="/pets/new"><mat-icon>add</mat-icon> Add pet</a>
+</div>
+
+<section class="filter-bar" aria-label="Search and filter pets">
+  <mat-form-field class="search">
+    <mat-label>Search pets</mat-label>
+    <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+    <input matInput type="search" placeholder="Name, breed or kind of animal" [value]="search()" (input)="onSearch($event)" />
+  </mat-form-field>
+
+  <button mat-stroked-button [matMenuTriggerFor]="sortMenu" aria-label="Sort pets">
+    <mat-icon>sort</mat-icon> {{ sortLabel() }}
+  </button>
+  <mat-menu #sortMenu="matMenu">
+    @for (option of sorts; track option.value) {
+      <button mat-menu-item role="menuitemradio" [attr.aria-checked]="sort() === option.value" (click)="sort.set(option.value)">
+        <mat-icon>{{ sort() === option.value ? 'check' : '' }}</mat-icon>
+        <span>{{ option.label }}</span>
+      </button>
+    }
+  </mat-menu>
+
+  @if (hasFilters()) {
+    <button mat-button (click)="clearFilters()">Clear filters</button>
+  }
+</section>
+
+<mat-chip-listbox class="species-chips" multiple aria-label="Filter by species">
+  @for (s of speciesOptions; track s) {
+    <mat-chip-option
+      [selected]="species().includes(s)"
+      (selectionChange)="$event.isUserInput && toggleSpecies(s, $event.selected)"
+    >
+      {{ speciesLabels[s] }}
+    </mat-chip-option>
+  }
+</mat-chip-listbox>
+
+@if (error()) {
+  <app-empty-state icon="error_outline" title="Could not load pets" message="Something went wrong while loading your pets.">
+    <button mat-flat-button (click)="retry()">Retry</button>
+  </app-empty-state>
+} @else if (loading() && pets().length === 0) {
+  <p class="muted" role="status">Loading pets…</p>
+} @else if (pets().length === 0) {
+  @if (hasFilters()) {
+    <app-empty-state icon="search_off" title="No pets match your search">
+      <button mat-stroked-button (click)="clearFilters()">Clear filters</button>
+    </app-empty-state>
+  } @else {
+    <app-empty-state icon="pets" title="No pets yet" message="Add your first pet to start keeping track of their health.">
+      <a mat-flat-button routerLink="/pets/new">Add pet</a>
+    </app-empty-state>
+  }
+} @else {
+  <ul class="grid" [class.stale]="loading()">
+    @for (pet of pets(); track pet.id) {
+      <li>
+        <mat-card class="pet-card" appearance="outlined">
+          <a class="card-link" [routerLink]="['/pets', pet.id]" [attr.aria-label]="'Open ' + pet.name">
+            <div class="top">
+              <app-species-icon [species]="pet.species" />
+              <div class="titles">
+                <h2>{{ pet.name }}</h2>
+                <div class="muted">
+                  {{ pet | speciesLabel }}@if (pet.breed) { · {{ pet.breed }} }
+                </div>
+              </div>
+            </div>
+            <dl>
+              <div><dt>Age</dt><dd>{{ pet.dateOfBirth | age }}</dd></div>
+              <div><dt>Records</dt><dd>{{ pet.recordCount }}</dd></div>
+              <div>
+                <dt>Last record</dt>
+                <dd>{{ pet.lastRecordDate ? (pet.lastRecordDate | date: 'mediumDate') : 'No records yet' }}</dd>
+              </div>
+            </dl>
+          </a>
+          <button mat-icon-button class="menu" [matMenuTriggerFor]="petMenu" [attr.aria-label]="'More actions for ' + pet.name">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #petMenu="matMenu">
+            <a mat-menu-item [routerLink]="['/pets', pet.id, 'edit']"><mat-icon>edit</mat-icon> Edit</a>
+            <button mat-menu-item (click)="deletePet(pet)"><mat-icon>delete</mat-icon> Delete</button>
+          </mat-menu>
+        </mat-card>
+      </li>
+    }
+  </ul>
+}

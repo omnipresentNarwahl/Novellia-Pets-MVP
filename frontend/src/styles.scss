@@ -1,0 +1,81 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$cyan-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+}
+
+a {
+  color: var(--mat-sys-primary);
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-medium);
+  }
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.form-banner {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.danger {
+  --mat-button-filled-container-color: var(--mat-sys-error);
+  --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+}
+
+/* Record dialog goes full screen on phones. */
+@media (max-width: 599.98px) {
+  .record-dialog-panel {
+    .mat-mdc-dialog-container {
+      --mat-dialog-container-shape: 0;
+    }
+  }
+}

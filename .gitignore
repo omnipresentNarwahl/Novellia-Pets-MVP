@@ -5,7 +5,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/.angular/
 # Optional JSON snapshots (see DECISIONS.md)
-data/
+/data/
 # Editors and OS
 .idea/
 .vscode/

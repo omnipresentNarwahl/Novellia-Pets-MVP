@@ -1,0 +1,122 @@
+<div class="page-header">
+  <h1>Dashboard</h1>
+</div>
+
+@if (error()) {
+  <app-empty-state icon="error_outline" title="Could not load the dashboard" message="Something went wrong while loading your pets.">
+    <button mat-flat-button (click)="load()">Retry</button>
+  </app-empty-state>
+} @else if (data(); as d) {
+  @if (d.totalPets === 0) {
+    <app-empty-state icon="pets" title="No pets yet" message="Add your first pet to start keeping track of their health.">
+      <a mat-flat-button routerLink="/pets/new">Add your first pet</a>
+    </app-empty-state>
+  } @else {
+    <section class="summary" aria-label="Summary">
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <div class="value">{{ d.totalPets }}</div>
+          <div class="label">Pets</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <div class="value">{{ d.totalRecords }}</div>
+          <div class="label">Records</div>
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <div class="value">{{ d.recordsLast30Days }}</div>
+          <div class="label">Records in the last 30 days</div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <section aria-labelledby="glance-heading">
+      <h2 id="glance-heading">Pets at a glance</h2>
+      <div class="table-scroll">
+        <table class="glance">
+          <thead>
+            <tr>
+              <th scope="col">Pet</th>
+              <th scope="col">Species</th>
+              <th scope="col">Age</th>
+              <th scope="col" class="num">Records</th>
+              <th scope="col">Last record</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pet of d.pets; track pet.petId) {
+              <tr>
+                <th scope="row">
+                  <a [routerLink]="['/pets', pet.petId]">{{ pet.name }}</a>
+                </th>
+                <td>
+                  <span class="species">
+                    <app-species-icon [species]="pet.species" style="--species-icon-size: 14px" />
+                    {{ pet | speciesLabel }}
+                  </span>
+                </td>
+                <td>{{ pet.dateOfBirth | age }}</td>
+                <td class="num">{{ pet.recordCount }}</td>
+                <td>{{ pet.lastRecordDate ? (pet.lastRecordDate | date: 'mediumDate') : 'No records yet' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="breakdowns">
+      <section aria-labelledby="species-heading">
+        <h2 id="species-heading">Pets by species</h2>
+        <ul class="bars">
+          @for (item of d.petsBySpecies; track item.label) {
+            <li>
+              <div class="bar-label"><span>{{ item.label }}</span><span>{{ item.count }}</span></div>
+              <mat-progress-bar mode="determinate" [value]="share(item, d.totalPets)" [attr.aria-label]="item.label + ': ' + item.count" />
+            </li>
+          }
+        </ul>
+      </section>
+      <section aria-labelledby="type-heading">
+        <h2 id="type-heading">Records by type</h2>
+        @if (d.recordsByType.length === 0) {
+          <p class="muted">No records yet.</p>
+        } @else {
+          <ul class="bars">
+            @for (item of d.recordsByType; track item.label) {
+              <li>
+                <div class="bar-label"><span>{{ item.label }}</span><span>{{ item.count }}</span></div>
+                <mat-progress-bar mode="determinate" [value]="share(item, d.totalRecords)" [attr.aria-label]="item.label + ': ' + item.count" />
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+
+    <section aria-labelledby="recent-heading">
+      <h2 id="recent-heading">Recent activity</h2>
+      @if (d.recentRecords.length === 0) {
+        <p class="muted">No records yet. Open a pet to add one.</p>
+      } @else {
+        <ul class="recent">
+          @for (r of d.recentRecords; track r.id) {
+            <li>
+              <a [routerLink]="['/pets', r.petId]">
+                <span class="date">{{ r.recordDate | date: 'mediumDate' }}</span>
+                <span class="pet">{{ r.petName }}</span>
+                <app-record-type-chip [type]="r.type" />
+                <span class="title">{{ r.title }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+} @else if (loading()) {
+  <p class="muted" role="status">Loading…</p>
+}

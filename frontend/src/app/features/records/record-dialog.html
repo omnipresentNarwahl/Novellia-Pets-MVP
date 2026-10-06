@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit record' : 'Add record' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-dialog-content>
+    <div class="fields">
+      @if (banner(); as message) {
+        <div class="form-banner" role="alert">{{ message }}</div>
+      }
+
+      <mat-form-field>
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type" required>
+          @for (t of typeOptions; track t) {
+            <mat-option [value]="t">{{ typeLabels[t] }}</mat-option>
+          }
+        </mat-select>
+        @if (error('type', 'Type'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Title</mat-label>
+        <input matInput formControlName="title" maxlength="150" required placeholder="For example Rabies booster" autocomplete="off" />
+        @if (error('title', 'Title'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Date</mat-label>
+        <input matInput formControlName="recordDate" [matDatepicker]="datePicker" [min]="minDate" [max]="maxDate" required />
+        <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+        <mat-datepicker #datePicker />
+        @if (error('recordDate', 'Date'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Provider</mat-label>
+        <input matInput formControlName="provider" maxlength="150" placeholder="Veterinarian or clinic" autocomplete="off" />
+        @if (error('provider', 'Provider'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Notes</mat-label>
+        <textarea matInput formControlName="notes" rows="4" maxlength="4000" placeholder="Dosage, results, follow-up"></textarea>
+        <mat-hint align="end">{{ form.controls.notes.value.length }}/4000</mat-hint>
+        @if (error('notes', 'Notes'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+  </mat-dialog-actions>
+</form>

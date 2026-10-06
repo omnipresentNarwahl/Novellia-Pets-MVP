@@ -1,0 +1,137 @@
+<p><a mat-button routerLink="/pets"><mat-icon>arrow_back</mat-icon> All pets</a></p>
+
+@if (petError()) {
+  <app-empty-state icon="error_outline" title="Could not load this pet">
+    <button mat-flat-button (click)="retryPet()">Retry</button>
+  </app-empty-state>
+} @else if (pet(); as pet) {
+  <mat-card appearance="outlined" class="profile">
+    <mat-card-content>
+      <div class="profile-top">
+        <app-species-icon [species]="pet.species" style="--species-icon-size: 28px" />
+        <div class="titles">
+          <h1>{{ pet.name }}</h1>
+          <div class="muted">{{ pet | speciesLabel }}@if (pet.breed) { · {{ pet.breed }} }</div>
+        </div>
+        <div class="profile-actions">
+          <a mat-stroked-button [routerLink]="['/pets', pet.id, 'edit']"><mat-icon>edit</mat-icon> Edit</a>
+          <button mat-stroked-button (click)="deletePet()"><mat-icon>delete</mat-icon> Delete</button>
+        </div>
+      </div>
+      <dl class="facts">
+        <div>
+          <dt>Age</dt>
+          <dd>{{ pet.dateOfBirth | age }}</dd>
+        </div>
+        @if (pet.dateOfBirth) {
+          <div>
+            <dt>Date of birth</dt>
+            <dd>{{ pet.dateOfBirth | date: 'longDate' }}</dd>
+          </div>
+        }
+      </dl>
+      @if (pet.notes) {
+        <p class="notes">{{ pet.notes }}</p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <section class="records" aria-labelledby="records-heading">
+    <div class="page-header">
+      <h2 id="records-heading">Medical records</h2>
+      <button mat-flat-button (click)="openRecordDialog()"><mat-icon>add</mat-icon> Add record</button>
+    </div>
+
+    <div class="filter-bar">
+      <mat-form-field class="search">
+        <mat-label>Search records</mat-label>
+        <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+        <input matInput type="search" placeholder="Title, provider or notes" [value]="search()" (input)="onSearch($event)" />
+      </mat-form-field>
+      @if (hasFilters()) {
+        <button mat-button (click)="clearFilters()">Clear filters</button>
+      }
+    </div>
+    <mat-chip-listbox class="type-chips" multiple aria-label="Filter by record type">
+      @for (t of typeOptions; track t) {
+        <mat-chip-option
+          [selected]="types().includes(t)"
+          (selectionChange)="$event.isUserInput && toggleType(t, $event.selected)"
+        >
+          {{ typeLabels[t] }}
+        </mat-chip-option>
+      }
+    </mat-chip-listbox>
+
+    @if (recordsError()) {
+      <app-empty-state icon="error_outline" title="Could not load records">
+        <button mat-flat-button (click)="retryRecords()">Retry</button>
+      </app-empty-state>
+    } @else if (recordsLoading() && records().length === 0) {
+      <p class="muted" role="status">Loading records…</p>
+    } @else if (records().length === 0) {
+      @if (hasFilters()) {
+        <app-empty-state icon="search_off" title="No records match">
+          <button mat-stroked-button (click)="clearFilters()">Clear filters</button>
+        </app-empty-state>
+      } @else {
+        <app-empty-state icon="medical_information" title="No records yet" message="Vaccinations, vet visits and medications you add will show up here.">
+          <button mat-flat-button (click)="openRecordDialog()">Add record</button>
+        </app-empty-state>
+      }
+    } @else {
+      <div class="table-scroll" [class.stale]="recordsLoading()">
+        <table
+          mat-table
+          matSort
+          matSortDisableClear
+          [dataSource]="records()"
+          [matSortActive]="sortField()"
+          [matSortDirection]="sortDirection()"
+          (matSortChange)="onSort($event)"
+        >
+          <ng-container matColumnDef="recordDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="recordDate">Date</th>
+            <td mat-cell *matCellDef="let r">{{ r.recordDate | date: 'mediumDate' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="type">Type</th>
+            <td mat-cell *matCellDef="let r"><app-record-type-chip [type]="r.type" /></td>
+          </ng-container>
+          <ng-container matColumnDef="title">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="title">Title</th>
+            <td mat-cell *matCellDef="let r">{{ r.title }}</td>
+          </ng-container>
+          <ng-container matColumnDef="provider">
+            <th mat-header-cell *matHeaderCellDef>Provider</th>
+            <td mat-cell *matCellDef="let r">{{ r.provider ?? '' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Notes</th>
+            <td mat-cell *matCellDef="let r">
+              @if (r.notes) {
+                <span class="note-text" [matTooltip]="r.notes">{{ r.notes }}</span>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef><span class="visually-hidden">Actions</span></th>
+            <td mat-cell *matCellDef="let r" class="actions-cell">
+              <button mat-icon-button (click)="openRecordDialog(r)" [attr.aria-label]="'Edit ' + r.title">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="deleteRecord(r)" [attr.aria-label]="'Delete ' + r.title">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+    }
+  </section>
+} @else if (petLoading()) {
+  <p class="muted" role="status">Loading…</p>
+}

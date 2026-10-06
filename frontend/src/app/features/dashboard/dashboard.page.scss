@@ -1,0 +1,131 @@
+h2 {
+  font: var(--mat-sys-title-large);
+  margin: 32px 0 12px;
+}
+
+.summary {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 600px) {
+  .summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.summary .value {
+  font: var(--mat-sys-display-small);
+  color: var(--mat-sys-primary);
+}
+
+.summary .label {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.summary mat-card-content {
+  padding: 16px;
+}
+
+.table-scroll {
+  position: relative; /* contains the absolutely positioned visually-hidden labels */
+  overflow-x: auto;
+}
+
+.glance {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    font-weight: 400;
+  }
+
+  thead th {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-label-large);
+  }
+
+  th[scope='row'] {
+    font-weight: 500;
+  }
+
+  .num {
+    text-align: right;
+  }
+}
+
+.species {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breakdowns {
+  display: grid;
+  gap: 0 32px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .breakdowns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    padding: 12px 4px;
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      background: var(--mat-sys-surface-container-low);
+    }
+  }
+
+  .date {
+    color: var(--mat-sys-on-surface-variant);
+    min-width: 110px;
+  }
+
+  .pet {
+    font-weight: 500;
+    min-width: 80px;
+  }
+
+  .title {
+    flex: 1 1 200px;
+  }
+}

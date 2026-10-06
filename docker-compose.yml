@@ -1,0 +1,17 @@
+services:
+  api:
+    build: ./backend
+    ports:
+      - "8081:8081"
+    environment:
+      # Set to false to start with an empty store instead of the demo pets.
+      APP_SEED_DEMO_DATA: "${APP_SEED_DEMO_DATA:-true}"
+      # Optional: the time zone that decides what "today" is, for example America/Los_Angeles.
+      APP_TIMEZONE: "${APP_TIMEZONE:-}"
+
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api

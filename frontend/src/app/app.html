@@ -1,0 +1,25 @@
+<mat-toolbar class="toolbar">
+  <a class="brand" routerLink="/dashboard"><span aria-hidden="true">🐾</span> Novellia Pets</a>
+  <span class="spacer"></span>
+  <nav class="links" aria-label="Main">
+    <a mat-button routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">Dashboard</a>
+    <a mat-button routerLink="/pets" routerLinkActive="active" ariaCurrentWhenActive="page">Pets</a>
+  </nav>
+  <button mat-icon-button class="menu-button" [matMenuTriggerFor]="menu" aria-label="Open navigation menu">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <a mat-menu-item routerLink="/dashboard">Dashboard</a>
+    <a mat-menu-item routerLink="/pets">Pets</a>
+  </mat-menu>
+</mat-toolbar>
+
+<div class="progress" role="status" aria-live="polite">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Loading" />
+  }
+</div>
+
+<main class="content">
+  <router-outlet />
+</main>
