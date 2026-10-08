@@ -97,7 +97,7 @@ Errors share one body: `{"status": 400, "message": "Validation failed", "errors"
 There are no browser end-to-end tests, so run through this once after a change:
 
 1. Open the dashboard. With demo data you see 3 pets, 8 records and activity in the last 30 days.
-2. Add a pet with species Other and check that a "What kind of animal?" field appears and is required. Save, and the pet page shows "Other (your description)".
+2. Add a pet with species Other and check that a "What kind of animal?" field appears and is required. Change species away from "Other" and the field disappears.Save, and the pet page shows "Other (your description)".
 3. Add a medical record to it. Try a date in the future and a date before the birth date and check both are refused.
 4. Edit the pet and the record. Change the pet from Other to Dog and check the description is gone.
 5. On the pets list, search by name, breed and the Other description, use the species chips and the sort menu, then clear the filters.
