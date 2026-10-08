@@ -1,12 +1,14 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, input, signal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { DailySteps } from '../../models/steps';
+import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { StepColumn, StepUnit } from './step-columns';
 
 const HEIGHT = 220;
 const MARGIN = { top: 12, right: 8, bottom: 28, left: 52 };
 const BAR_GAP = 2;
 const CORNER = 4;
-const TOOLTIP_HALF_WIDTH = 72;
+const TOOLTIP_HALF_WIDTH = 80;
+/** Minimum room for one x-axis label, in pixels. */
+const LABEL_SPACING = { day: 56, week: 56, month: 32 } as const;
 
 /** Ticks from 0 up to a round number at or above `max`, about `count` steps apart (steps of 1, 2, 2.5 or 5). */
 export function niceTicks(max: number, count = 4): number[] {
@@ -25,7 +27,7 @@ export function niceTicks(max: number, count = 4): number[] {
 }
 
 interface Bar {
-  day: DailySteps;
+  column: StepColumn;
   /** Left edge and width of the whole column, used as the hover target. */
   bandX: number;
   bandWidth: number;
@@ -34,15 +36,20 @@ interface Bar {
   path: string | null;
 }
 
-/** Daily step totals as columns. Hover a column for its exact count; screen readers get a table instead. */
+/**
+ * Step counts as columns, one per day, week or month. Hover a column for its exact value; screen readers get a
+ * table instead.
+ */
 @Component({
   selector: 'app-steps-chart',
-  imports: [DatePipe, DecimalPipe],
+  imports: [DatePipe, DecimalPipe, NgTemplateOutlet],
   templateUrl: './steps-chart.html',
   styleUrl: './steps-chart.scss',
 })
 export class StepsChart {
-  readonly days = input.required<DailySteps[]>();
+  readonly columns = input.required<StepColumn[]>();
+  /** What one column covers. Weeks and months show the average per day. */
+  readonly unit = input<StepUnit>('day');
 
   protected readonly height = HEIGHT;
   protected readonly margin = MARGIN;
@@ -52,22 +59,24 @@ export class StepsChart {
   private readonly plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
   protected readonly baseline = MARGIN.top + this.plotHeight;
 
-  protected readonly ticks = computed(() => niceTicks(Math.max(0, ...this.days().map((d) => d.steps))));
+  protected readonly ticks = computed(() => niceTicks(Math.max(0, ...this.columns().map((c) => c.steps))));
   private readonly top = computed(() => this.ticks()[this.ticks().length - 1] || 1);
 
   protected readonly gridlines = computed(() => this.ticks().map((value) => ({ value, y: this.y(value) })));
 
   protected readonly bars = computed<Bar[]>(() => {
-    const days = this.days();
+    const columns = this.columns();
     const plotWidth = Math.max(0, this.width() - MARGIN.left - MARGIN.right);
-    const band = days.length ? plotWidth / days.length : 0;
-    const barWidth = Math.max(1, band - BAR_GAP);
-    return days.map((day, i) => {
+    const band = columns.length ? plotWidth / columns.length : 0;
+    // Wide columns (a year of months) look heavy edge to edge, so their gap grows with them.
+    const gap = band > 40 ? band * 0.25 : BAR_GAP;
+    const barWidth = Math.max(1, band - gap);
+    return columns.map((column, i) => {
       const bandX = MARGIN.left + i * band;
-      const x = bandX + BAR_GAP / 2;
-      const top = this.y(day.steps);
+      const x = bandX + gap / 2;
+      const top = this.y(column.steps);
       return {
-        day,
+        column,
         bandX,
         bandWidth: band,
         centerX: bandX + band / 2,
@@ -77,10 +86,18 @@ export class StepsChart {
     });
   });
 
-  /** A date label under every seventh column, counting back from the newest so today is always labelled. */
+  /**
+   * As many x-axis labels as fit, counting back from the newest column so it is always labelled. Days are
+   * labelled a whole number of weeks apart.
+   */
   protected readonly xLabels = computed(() => {
     const bars = this.bars();
-    return bars.filter((_, i) => (bars.length - 1 - i) % 7 === 0);
+    const band = bars[0]?.bandWidth || 1;
+    let every = Math.max(1, Math.ceil(LABEL_SPACING[this.unit()] / band));
+    if (this.unit() === 'day') {
+      every = Math.ceil(every / 7) * 7;
+    }
+    return bars.filter((_, i) => (bars.length - 1 - i) % every === 0);
   });
 
   protected readonly tooltip = computed(() => {
@@ -90,7 +107,7 @@ export class StepsChart {
       return null;
     }
     const left = Math.min(Math.max(bar.centerX, TOOLTIP_HALF_WIDTH), this.width() - TOOLTIP_HALF_WIDTH);
-    return { day: bar.day, left, top: bar.top };
+    return { column: bar.column, left, top: bar.top };
   });
 
   constructor() {

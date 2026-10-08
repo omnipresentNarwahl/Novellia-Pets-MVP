@@ -49,7 +49,7 @@
         <mat-card-content>
           <section aria-labelledby="activity-heading">
             <div class="activity-header">
-              <h2 id="activity-heading">Daily steps</h2>
+              <h2 id="activity-heading">Steps</h2>
               @if (s.averageLast7Days !== null) {
                 <div class="average">
                   <span class="average-value">{{ s.averageLast7Days | number }}</span>
@@ -57,8 +57,20 @@
                 </div>
               }
             </div>
-            <p class="muted chart-caption">Last {{ s.days.length }} days</p>
-            <app-steps-chart [days]="s.days" />
+            <div class="chart-controls">
+              <p class="muted chart-caption">{{ stepRangeInfo().caption }}</p>
+              <mat-button-toggle-group
+                hideSingleSelectionIndicator
+                aria-label="Chart range"
+                [value]="stepRange()"
+                (change)="stepRange.set($event.value)"
+              >
+                @for (r of stepRanges; track r.value) {
+                  <mat-button-toggle [value]="r.value">{{ r.label }}</mat-button-toggle>
+                }
+              </mat-button-toggle-group>
+            </div>
+            <app-steps-chart [columns]="stepChartColumns()" [unit]="stepRangeInfo().unit" />
           </section>
         </mat-card-content>
       </mat-card>

@@ -78,8 +78,21 @@
   font: var(--mat-sys-title-large);
 }
 
+.chart-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 8px 0 16px;
+}
+
 .chart-caption {
-  margin: 4px 0 12px;
+  margin: 0;
+}
+
+mat-button-toggle-group {
+  --mat-button-toggle-height: 36px;
 }
 
 .records {

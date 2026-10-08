@@ -6,20 +6,24 @@
     </text>
   }
 
-  @for (bar of bars(); track bar.day.date; let i = $index) {
+  @for (bar of bars(); track bar.column.start; let i = $index) {
     @if (bar.path) {
-      <path class="bar" [class.partial]="bar.day.partial" [class.active]="hovered() === i" [attr.d]="bar.path" />
+      <path class="bar" [class.partial]="bar.column.partial" [class.active]="hovered() === i" [attr.d]="bar.path" />
     }
   }
 
-  @for (bar of xLabels(); track bar.day.date) {
+  @for (bar of xLabels(); track bar.column.start) {
     <text class="axis-label" [attr.x]="bar.centerX" [attr.y]="height - 8" text-anchor="middle">
-      {{ bar.day.partial ? 'Today' : (bar.day.date | date: 'MMM d') }}
+      @switch (unit()) {
+        @case ('day') { {{ bar.column.partial ? 'Today' : (bar.column.start | date: 'MMM d') }} }
+        @case ('week') { {{ bar.column.partial ? 'This week' : (bar.column.start | date: 'MMM d') }} }
+        @case ('month') { {{ bar.column.start | date: 'MMM' }} }
+      }
     </text>
   }
 
   <!-- Full-height hover targets, so short columns are as easy to hit as tall ones. -->
-  @for (bar of bars(); track bar.day.date; let i = $index) {
+  @for (bar of bars(); track bar.column.start; let i = $index) {
     <rect
       class="hit"
       [attr.x]="bar.bandX"
@@ -33,24 +37,38 @@
 
 @if (tooltip(); as tip) {
   <div class="tooltip" [style.left.px]="tip.left" [style.top.px]="tip.top">
-    <div class="tooltip-date">{{ tip.day.date | date: 'EEE, MMM d' }}</div>
+    <div class="tooltip-date">
+      <ng-container *ngTemplateOutlet="period; context: { $implicit: tip.column }" />
+    </div>
     <div class="tooltip-value">
-      {{ tip.day.steps | number }} steps@if (tip.day.partial) { <span class="muted">so far</span> }
+      <ng-container *ngTemplateOutlet="value; context: { $implicit: tip.column }" />
     </div>
   </div>
 }
 
 <table class="visually-hidden">
-  <caption>Daily steps</caption>
+  <caption>{{ unit() === 'day' ? 'Steps per day' : 'Average steps per day' }}</caption>
   <thead>
-    <tr><th scope="col">Date</th><th scope="col">Steps</th></tr>
+    <tr><th scope="col">{{ unit() === 'day' ? 'Date' : unit() === 'week' ? 'Week' : 'Month' }}</th><th scope="col">Steps</th></tr>
   </thead>
   <tbody>
-    @for (day of days(); track day.date) {
+    @for (column of columns(); track column.start) {
       <tr>
-        <th scope="row">{{ day.date | date: 'longDate' }}</th>
-        <td>{{ day.steps | number }}{{ day.partial ? ' so far' : '' }}</td>
+        <th scope="row"><ng-container *ngTemplateOutlet="period; context: { $implicit: column }" /></th>
+        <td><ng-container *ngTemplateOutlet="value; context: { $implicit: column }" /></td>
       </tr>
     }
   </tbody>
 </table>
+
+<ng-template #period let-column>
+  @switch (unit()) {
+    @case ('day') { {{ column.start | date: 'EEE, MMM d' }} }
+    @case ('week') { {{ column.start | date: 'MMM d' }} – {{ column.end | date: 'MMM d' }} }
+    @case ('month') { {{ column.start | date: 'MMMM y' }} }
+  }
+</ng-template>
+
+<ng-template #value let-column>
+  {{ column.steps | number }} {{ unit() === 'day' ? 'steps' : 'steps a day' }}@if (column.partial) {&ngsp;<span class="muted">so far</span>}
+</ng-template>

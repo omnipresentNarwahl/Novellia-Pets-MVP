@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -33,6 +34,7 @@ import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
 import { formDialogConfig } from '../../shared/form-dialog';
 import { RecordDialog, RecordDialogData, RecordDialogMode } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
+import { STEP_RANGES, StepRange, stepColumns } from '../steps/step-columns';
 import { StepsChart } from '../steps/steps-chart';
 import { StepsService } from '../steps/steps.service';
 import { openPetDialog } from './pet-dialog';
@@ -45,6 +47,7 @@ import { PetService } from './pet.service';
     DatePipe,
     DecimalPipe,
     MatButtonModule,
+    MatButtonToggleModule,
     MatCardModule,
     MatChipsModule,
     MatFormFieldModule,
@@ -96,6 +99,10 @@ export class PetDetailPage {
   protected readonly steps = signal<StepsResponse | null>(null);
   protected readonly stepsError = signal(false);
   private readonly stepsTick = signal(0);
+  protected readonly stepRanges = STEP_RANGES;
+  protected readonly stepRange = signal<StepRange>('month');
+  protected readonly stepRangeInfo = computed(() => STEP_RANGES.find((r) => r.value === this.stepRange())!);
+  protected readonly stepChartColumns = computed(() => stepColumns(this.steps()?.days ?? [], this.stepRange()));
 
   protected readonly hasFilters = computed(() => this.search().trim() !== '' || this.types().length > 0);
   protected readonly sortField = computed(() => this.sort().split(',')[0]);
@@ -133,7 +140,8 @@ export class PetDetailPage {
       .pipe(
         tap(() => this.stepsError.set(false)),
         switchMap(([id]) =>
-          this.stepsService.daily(id).pipe(
+          // A year of daily totals, so switching the chart's range needs no further requests.
+          this.stepsService.daily(id, 366).pipe(
             catchError((err: HttpErrorResponse) => {
               // A 404 means the pet is gone, and the pet request above routes to the not-found page.
               this.stepsError.set(err.status !== 404);
