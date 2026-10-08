@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { MedicalRecord } from '../../models/medical-record';
 import { Notifier } from '../../core/notifier';
 import { RecordDialog, RecordDialogData } from './record-dialog';
@@ -14,7 +14,9 @@ describe('RecordDialog', () => {
   const close = vi.fn();
   const notifier = { success: vi.fn(), error: vi.fn() };
   const confirmResult = vi.fn(() => true);
-  const matDialog = { open: () => ({ afterClosed: () => of(confirmResult()) }) };
+  const matDialog = { open: vi.fn(() => ({ afterClosed: () => of(confirmResult()) })) };
+  let backdropClick: Subject<MouseEvent>;
+  let keydown: Subject<KeyboardEvent>;
 
   type Internals = {
     form: RecordDialog['form'];
@@ -40,7 +42,10 @@ describe('RecordDialog', () => {
         provideHttpClientTesting(),
         provideNativeDateAdapter(),
         { provide: MAT_DIALOG_DATA, useValue: data },
-        { provide: MatDialogRef, useValue: { close } },
+        {
+          provide: MatDialogRef,
+          useValue: { close, disableClose: false, backdropClick: () => backdropClick, keydownEvents: () => keydown },
+        },
         { provide: Notifier, useValue: notifier },
       ],
     })
@@ -57,6 +62,9 @@ describe('RecordDialog', () => {
     close.mockReset();
     notifier.error.mockReset();
     confirmResult.mockReset().mockReturnValue(true);
+    matDialog.open.mockClear();
+    backdropClick = new Subject();
+    keydown = new Subject();
   });
 
   afterEach(() => http.verify());
@@ -156,6 +164,33 @@ describe('RecordDialog', () => {
       expect(req.request.body).toMatchObject({ title: 'Antibiotic course', recordDate: '2024-04-02', provider: null });
       req.flush({ ...record, title: 'Antibiotic course' });
       expect(close).toHaveBeenCalledWith('saved');
+    });
+
+    it('closes on a backdrop click or Escape without asking when nothing has changed', () => {
+      backdropClick.next(new MouseEvent('click'));
+      keydown.next(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(matDialog.open).not.toHaveBeenCalled();
+      expect(close).toHaveBeenCalledTimes(2);
+    });
+
+    it('asks before a backdrop click discards changes', () => {
+      dialog().form.controls.title.markAsDirty();
+
+      confirmResult.mockReturnValue(false);
+      backdropClick.next(new MouseEvent('click'));
+      expect(matDialog.open).toHaveBeenCalledTimes(1);
+      expect(close).not.toHaveBeenCalled();
+
+      confirmResult.mockReturnValue(true);
+      backdropClick.next(new MouseEvent('click'));
+      expect(close).toHaveBeenCalledWith();
+    });
+
+    it('asks before Escape discards changes', () => {
+      dialog().form.controls.title.markAsDirty();
+      keydown.next(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(matDialog.open).toHaveBeenCalledTimes(1);
+      expect(close).toHaveBeenCalledWith();
     });
 
     it('closes on cancel', () => {
