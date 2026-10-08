@@ -82,6 +82,7 @@ export class RecordDialog {
 
   protected readonly typeOptions = RECORD_TYPES;
   protected readonly typeLabels = RECORD_TYPE_LABELS;
+  protected readonly petName = this.data.petName;
   protected readonly record = this.data.record;
   protected readonly isExisting = !!this.record;
   /** Cancel returns to the read view only when the dialog started there. */

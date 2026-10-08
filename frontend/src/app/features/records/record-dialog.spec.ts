@@ -177,6 +177,7 @@ describe('RecordDialog', () => {
       expect(text).toContain('Not recorded');
       expect(text).toContain('With food');
       expect(buttonLabels()).toEqual(['Delete', 'Edit']);
+      expect(fixture.nativeElement.querySelector('h2').textContent).toContain('Biscuit');
     });
 
     it('switches to editing, and cancel returns to the read view with the original values', async () => {
@@ -185,6 +186,7 @@ describe('RecordDialog', () => {
       await fixture.whenStable();
       expect(inputCount()).toBe(5);
       expect(buttonLabels()).toEqual(['Cancel', 'Save']);
+      expect(fixture.nativeElement.querySelector('h2').textContent).toContain('Biscuit');
 
       dialog().form.patchValue({ title: 'Changed' });
       dialog().cancel();

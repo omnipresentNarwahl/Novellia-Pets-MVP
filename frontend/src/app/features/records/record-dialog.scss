@@ -5,6 +5,21 @@
   padding-right: 12px;
 }
 
+.pet-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-title-small);
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 .fields {
   display: flex;
   flex-direction: column;
