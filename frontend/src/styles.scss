@@ -79,3 +79,18 @@ a {
     }
   }
 }
+
+/* Table rows that open a record. */
+.clickable-row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--mat-sys-surface-container-low);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+}

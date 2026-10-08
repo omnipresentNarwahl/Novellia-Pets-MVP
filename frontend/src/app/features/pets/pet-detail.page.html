@@ -117,17 +117,25 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef><span class="visually-hidden">Actions</span></th>
             <td mat-cell *matCellDef="let r" class="actions-cell">
-              <button mat-icon-button (click)="openRecordDialog(r)" [attr.aria-label]="'Edit ' + r.title">
+              <button mat-icon-button (click)="$event.stopPropagation(); openRecordDialog(r, 'edit')" [attr.aria-label]="'Edit ' + r.title">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button (click)="deleteRecord(r)" [attr.aria-label]="'Delete ' + r.title">
+              <button mat-icon-button (click)="$event.stopPropagation(); deleteRecord(r)" [attr.aria-label]="'Delete ' + r.title">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: columns"
+            class="clickable-row"
+            tabindex="0"
+            [attr.aria-label]="'View ' + row.title"
+            (click)="openRecordDialog(row)"
+            (keydown.enter)="$event.target === $event.currentTarget && openRecordDialog(row)"
+          ></tr>
         </table>
       </div>
     }

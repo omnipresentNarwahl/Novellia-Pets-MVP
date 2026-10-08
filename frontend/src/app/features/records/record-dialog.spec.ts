@@ -2,7 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNativeDateAdapter } from '@angular/material/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import { MedicalRecord } from '../../models/medical-record';
 import { Notifier } from '../../core/notifier';
 import { RecordDialog, RecordDialogData } from './record-dialog';
@@ -12,8 +13,23 @@ describe('RecordDialog', () => {
   let http: HttpTestingController;
   const close = vi.fn();
   const notifier = { success: vi.fn(), error: vi.fn() };
+  const confirmResult = vi.fn(() => true);
+  const matDialog = { open: () => ({ afterClosed: () => of(confirmResult()) }) };
 
-  type Internals = { form: RecordDialog['form']; submit(): void; minDate: Date | null };
+  type Internals = {
+    form: RecordDialog['form'];
+    mode(): 'view' | 'edit';
+    submit(): void;
+    edit(): void;
+    cancel(): void;
+    delete(): void;
+    minDate: Date | null;
+  };
+  const buttonLabels = () =>
+    Array.from(fixture.nativeElement.querySelectorAll('mat-dialog-actions button') as NodeListOf<HTMLElement>).map((b) =>
+      b.textContent!.replace(/^\s*(edit|delete)\s*/, '').trim(),
+    );
+  const inputCount = () => fixture.nativeElement.querySelectorAll('input, textarea, mat-select').length;
   const dialog = () => fixture.componentInstance as unknown as Internals;
 
   const setup = async (data: RecordDialogData) => {
@@ -27,7 +43,10 @@ describe('RecordDialog', () => {
         { provide: MatDialogRef, useValue: { close } },
         { provide: Notifier, useValue: notifier },
       ],
-    }).compileComponents();
+    })
+      // The component imports MatDialogModule, which would otherwise shadow a plain provider.
+      .overrideProvider(MatDialog, { useValue: matDialog })
+      .compileComponents();
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(RecordDialog);
     fixture.detectChanges();
@@ -37,12 +56,13 @@ describe('RecordDialog', () => {
   beforeEach(() => {
     close.mockReset();
     notifier.error.mockReset();
+    confirmResult.mockReset().mockReturnValue(true);
   });
 
   afterEach(() => http.verify());
 
   describe('adding', () => {
-    beforeEach(() => setup({ petId: 'pet-1', petDateOfBirth: '2020-03-01' }));
+    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petDateOfBirth: '2020-03-01' }));
 
     it('defaults the date to today and limits the earliest date to the pet birth date', () => {
       const date = dialog().form.controls.recordDate.value!;
@@ -110,19 +130,19 @@ describe('RecordDialog', () => {
     });
   });
 
-  describe('editing', () => {
-    const record: MedicalRecord = {
-      id: 'rec-9',
-      petId: 'pet-1',
-      type: 'MEDICATION',
-      title: 'Antibiotic',
-      recordDate: '2024-04-02',
-      provider: null,
-      notes: 'With food',
-      createdAt: '2024-04-02T10:00:00Z',
-    };
+  const record: MedicalRecord = {
+    id: 'rec-9',
+    petId: 'pet-1',
+    type: 'MEDICATION',
+    title: 'Antibiotic',
+    recordDate: '2024-04-02',
+    provider: null,
+    notes: 'With food',
+    createdAt: '2024-04-02T10:00:00Z',
+  };
 
-    beforeEach(() => setup({ petId: 'pet-1', petDateOfBirth: null, record }));
+  describe('editing', () => {
+    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petDateOfBirth: null, record, mode: 'edit' }));
 
     it('opens filled in and saves with a PUT to the record', () => {
       expect(dialog().form.getRawValue()).toMatchObject({ type: 'MEDICATION', title: 'Antibiotic', notes: 'With food' });
@@ -136,6 +156,61 @@ describe('RecordDialog', () => {
       expect(req.request.body).toMatchObject({ title: 'Antibiotic course', recordDate: '2024-04-02', provider: null });
       req.flush({ ...record, title: 'Antibiotic course' });
       expect(close).toHaveBeenCalledWith('saved');
+    });
+
+    it('closes on cancel', () => {
+      dialog().cancel();
+      expect(close).toHaveBeenCalledWith();
+    });
+  });
+
+  describe('viewing', () => {
+    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petDateOfBirth: null, record }));
+
+    it('opens read only with edit and delete instead of cancel and save', () => {
+      expect(dialog().mode()).toBe('view');
+      expect(inputCount()).toBe(0);
+      const text = fixture.nativeElement.querySelector('.details').textContent;
+      expect(text).toContain('Medication');
+      expect(text).toContain('Antibiotic');
+      expect(text).toContain('April 2, 2024');
+      expect(text).toContain('Not recorded');
+      expect(text).toContain('With food');
+      expect(buttonLabels()).toEqual(['Delete', 'Edit']);
+    });
+
+    it('switches to editing, and cancel returns to the read view with the original values', async () => {
+      dialog().edit();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(inputCount()).toBe(5);
+      expect(buttonLabels()).toEqual(['Cancel', 'Save']);
+
+      dialog().form.patchValue({ title: 'Changed' });
+      dialog().cancel();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(close).not.toHaveBeenCalled();
+      expect(dialog().mode()).toBe('view');
+      expect(inputCount()).toBe(0);
+      expect(dialog().form.getRawValue().title).toBe('Antibiotic');
+      expect(dialog().form.getRawValue().recordDate!.toDateString()).toBe(new Date(2024, 3, 2).toDateString());
+    });
+
+    it('deletes after confirmation and closes with deleted', () => {
+      dialog().delete();
+      const req = http.expectOne('/api/pets/pet-1/records/rec-9');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null, { status: 204, statusText: 'No Content' });
+      expect(close).toHaveBeenCalledWith('deleted');
+    });
+
+    it('does nothing when the deletion is not confirmed', () => {
+      confirmResult.mockReturnValue(false);
+      dialog().delete();
+      http.expectNone('/api/pets/pet-1/records/rec-9');
+      expect(close).not.toHaveBeenCalled();
     });
   });
 });

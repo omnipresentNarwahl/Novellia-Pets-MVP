@@ -104,13 +104,17 @@
       } @else {
         <ul class="recent">
           @for (r of d.recentRecords; track r.id) {
-            <li>
-              <a [routerLink]="['/pets', r.petId]">
-                <span class="date">{{ r.recordDate | date: 'mediumDate' }}</span>
-                <span class="pet">{{ r.petName }}</span>
-                <app-record-type-chip [type]="r.type" />
-                <span class="title">{{ r.title }}</span>
-              </a>
+            <li
+              class="clickable-row"
+              tabindex="0"
+              [attr.aria-label]="'View ' + r.title + ' for ' + r.petName"
+              (click)="openRecord(r)"
+              (keydown.enter)="$event.target === $event.currentTarget && openRecord(r)"
+            >
+              <span class="date">{{ r.recordDate | date: 'mediumDate' }}</span>
+              <a class="pet" [routerLink]="['/pets', r.petId]" (click)="$event.stopPropagation()">{{ r.petName }}</a>
+              <app-record-type-chip [type]="r.type" />
+              <span class="title">{{ r.title }}</span>
             </li>
           }
         </ul>

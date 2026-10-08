@@ -26,6 +26,10 @@ export class RecordService {
     return this.http.get<MedicalRecord[]>(`/api/pets/${petId}/records`, { params });
   }
 
+  get(petId: string, recordId: string): Observable<MedicalRecord> {
+    return this.http.get<MedicalRecord>(`/api/pets/${petId}/records/${recordId}`);
+  }
+
   create(petId: string, request: RecordRequest): Observable<MedicalRecord> {
     return this.http.post<MedicalRecord>(`/api/pets/${petId}/records`, request);
   }

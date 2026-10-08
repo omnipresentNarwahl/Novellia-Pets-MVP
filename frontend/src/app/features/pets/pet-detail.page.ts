@@ -29,7 +29,7 @@ import { EmptyState } from '../../shared/empty-state';
 import { RecordTypeChip } from '../../shared/record-type-chip';
 import { SpeciesIcon } from '../../shared/species-icon';
 import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
-import { RecordDialog, RecordDialogData, recordDialogConfig } from '../records/record-dialog';
+import { RecordDialog, RecordDialogData, RecordDialogMode, recordDialogConfig } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
 import { PetService } from './pet.service';
 
@@ -193,18 +193,27 @@ export class PetDetailPage {
     this.retryRecords();
   }
 
-  protected openRecordDialog(record?: MedicalRecord): void {
+  protected openRecordDialog(record?: MedicalRecord, mode: RecordDialogMode = 'view'): void {
     const pet = this.pet();
     if (!pet) {
       return;
     }
-    const data: RecordDialogData = { petId: pet.id, petDateOfBirth: pet.dateOfBirth, record };
+    const data: RecordDialogData = {
+      petId: pet.id,
+      petName: pet.name,
+      petDateOfBirth: pet.dateOfBirth,
+      record,
+      mode,
+    };
     this.dialog
       .open(RecordDialog, recordDialogConfig(this.breakpoints, data))
       .afterClosed()
       .subscribe((result) => {
         if (result === 'saved') {
           this.notifier.success(record ? 'Record updated' : 'Record added');
+          this.reloadAll();
+        } else if (result === 'deleted') {
+          this.notifier.success('Record deleted');
           this.reloadAll();
         } else if (result === 'gone') {
           this.reloadAll();
