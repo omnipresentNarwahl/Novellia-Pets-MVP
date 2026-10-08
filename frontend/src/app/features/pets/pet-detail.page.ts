@@ -201,6 +201,7 @@ export class PetDetailPage {
     const data: RecordDialogData = {
       petId: pet.id,
       petName: pet.name,
+      petSpecies: pet.species,
       petDateOfBirth: pet.dateOfBirth,
       record,
       mode,

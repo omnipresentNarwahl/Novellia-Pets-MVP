@@ -20,8 +20,10 @@ import { nullIfBlank } from '../../core/strings';
 import { notBlank } from '../../core/validators';
 import { MedicalRecord, RecordRequest } from '../../models/medical-record';
 import { RECORD_TYPES, RECORD_TYPE_LABELS, RecordType } from '../../models/record-type';
+import { Species } from '../../models/species';
 import { confirm } from '../../shared/confirm-dialog';
 import { RecordTypeChip } from '../../shared/record-type-chip';
+import { SpeciesIcon } from '../../shared/species-icon';
 import { RecordService } from './record.service';
 
 export type RecordDialogMode = 'view' | 'edit';
@@ -29,6 +31,7 @@ export type RecordDialogMode = 'view' | 'edit';
 export interface RecordDialogData {
   petId: string;
   petName: string;
+  petSpecies: Species;
   petDateOfBirth: string | null;
   /** Present when viewing or editing; absent when adding. */
   record?: MedicalRecord;
@@ -71,6 +74,7 @@ export function recordDialogConfig(
     MatInputModule,
     MatSelectModule,
     RecordTypeChip,
+    SpeciesIcon,
   ],
   templateUrl: './record-dialog.html',
   styleUrl: './record-dialog.scss',
@@ -85,6 +89,7 @@ export class RecordDialog {
   protected readonly typeOptions = RECORD_TYPES;
   protected readonly typeLabels = RECORD_TYPE_LABELS;
   protected readonly petName = this.data.petName;
+  protected readonly petSpecies = this.data.petSpecies;
   protected readonly record = this.data.record;
   protected readonly isExisting = !!this.record;
   /** Cancel returns to the read view only when the dialog started there. */

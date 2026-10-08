@@ -1,7 +1,8 @@
 <div class="title-row">
   <h2 mat-dialog-title>
-    {{ mode() === 'view' ? 'Record' : isExisting ? 'Edit record' : 'Add record' }}
-    <span class="pet-name"><mat-icon aria-hidden="true">pets</mat-icon> {{ petName }}</span>
+    {{ mode() === 'view' ? 'Record' : isExisting ? 'Edit record' : 'Add record' }} -
+    <app-species-icon [species]="petSpecies" style="--species-icon-size: 14px" />
+    {{ petName }}
   </h2>
   @if (mode() === 'view') {
     <button mat-icon-button type="button" mat-dialog-close aria-label="Close"><mat-icon>close</mat-icon></button>

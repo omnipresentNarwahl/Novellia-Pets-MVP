@@ -70,7 +70,7 @@ describe('RecordDialog', () => {
   afterEach(() => http.verify());
 
   describe('adding', () => {
-    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petDateOfBirth: '2020-03-01' }));
+    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petSpecies: 'DOG', petDateOfBirth: '2020-03-01' }));
 
     it('defaults the date to today and limits the earliest date to the pet birth date', () => {
       const date = dialog().form.controls.recordDate.value!;
@@ -150,7 +150,7 @@ describe('RecordDialog', () => {
   };
 
   describe('editing', () => {
-    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petDateOfBirth: null, record, mode: 'edit' }));
+    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petSpecies: 'DOG', petDateOfBirth: null, record, mode: 'edit' }));
 
     it('opens filled in and saves with a PUT to the record', () => {
       expect(dialog().form.getRawValue()).toMatchObject({ type: 'MEDICATION', title: 'Antibiotic', notes: 'With food' });
@@ -200,7 +200,7 @@ describe('RecordDialog', () => {
   });
 
   describe('viewing', () => {
-    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petDateOfBirth: null, record }));
+    beforeEach(() => setup({ petId: 'pet-1', petName: 'Biscuit', petSpecies: 'DOG', petDateOfBirth: null, record }));
 
     it('opens read only with edit and delete instead of cancel and save', () => {
       expect(dialog().mode()).toBe('view');
