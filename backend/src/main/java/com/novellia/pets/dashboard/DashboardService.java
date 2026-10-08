@@ -10,6 +10,8 @@ import com.novellia.pets.pet.Species;
 import com.novellia.pets.record.MedicalRecord;
 import com.novellia.pets.record.RecordRepository;
 import com.novellia.pets.record.RecordType;
+import com.novellia.pets.steps.StepRepository;
+import com.novellia.pets.steps.StepService;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -27,12 +29,15 @@ public class DashboardService {
 
     private final PetRepository pets;
     private final RecordRepository records;
+    private final StepRepository steps;
     private final StoreLock lock;
     private final Clock clock;
 
-    public DashboardService(PetRepository pets, RecordRepository records, StoreLock lock, Clock clock) {
+    public DashboardService(PetRepository pets, RecordRepository records, StepRepository steps, StoreLock lock,
+            Clock clock) {
         this.pets = pets;
         this.records = records;
+        this.steps = steps;
         this.lock = lock;
         this.clock = clock;
     }
@@ -41,7 +46,8 @@ public class DashboardService {
         return lock.read(() -> {
             List<Pet> allPets = pets.findAll();
             List<MedicalRecord> allRecords = records.findAll();
-            LocalDate cutoff = LocalDate.now(clock).minusDays(30);
+            LocalDate today = LocalDate.now(clock);
+            LocalDate cutoff = today.minusDays(30);
 
             long recent30 = allRecords.stream().filter(r -> !r.recordDate().isBefore(cutoff)).count();
 
@@ -56,7 +62,8 @@ public class DashboardService {
 
             List<PetSummary> summaries = allPets.stream()
                     .sorted(Comparator.comparing(Pet::name, String.CASE_INSENSITIVE_ORDER).thenComparing(Pet::id))
-                    .map(pet -> summarize(pet, byPet.getOrDefault(pet.id(), List.of())))
+                    .map(pet -> summarize(pet, byPet.getOrDefault(pet.id(), List.of()),
+                            StepService.averageLast7Days(steps, pet.id(), today)))
                     .toList();
 
             List<RecentRecord> newest = allRecords.stream()
@@ -75,11 +82,11 @@ public class DashboardService {
         });
     }
 
-    private static PetSummary summarize(Pet pet, List<MedicalRecord> petRecords) {
+    private static PetSummary summarize(Pet pet, List<MedicalRecord> petRecords, Long averageDailySteps) {
         LocalDate last = petRecords.stream().map(MedicalRecord::recordDate)
                 .max(Comparator.naturalOrder()).orElse(null);
         return new PetSummary(pet.id(), pet.name(), pet.species(), pet.speciesOther(), pet.dateOfBirth(),
-                petRecords.size(), last);
+                petRecords.size(), last, averageDailySteps);
     }
 
     /** Counts in enum order, leaving out values with no entries. Other pets are all one bucket. */

@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -28,6 +28,7 @@ import { DashboardService } from './dashboard.service';
   imports: [
     RouterLink,
     DatePipe,
+    DecimalPipe,
     MatButtonModule,
     MatCardModule,
     MatIconModule,

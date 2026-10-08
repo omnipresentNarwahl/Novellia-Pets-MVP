@@ -8,6 +8,9 @@ import com.novellia.pets.pet.PetService;
 import com.novellia.pets.record.InMemoryRecordRepository;
 import com.novellia.pets.record.RecordRepository;
 import com.novellia.pets.record.RecordService;
+import com.novellia.pets.steps.InMemoryStepRepository;
+import com.novellia.pets.steps.StepRepository;
+import com.novellia.pets.steps.StepService;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,8 +23,10 @@ public class Fixtures {
     public final Clock clock = Clock.fixed(Instant.parse("2026-10-06T12:00:00Z"), ZoneOffset.UTC);
     public final PetRepository pets = new InMemoryPetRepository();
     public final RecordRepository records = new InMemoryRecordRepository();
+    public final StepRepository steps = new InMemoryStepRepository();
     public final StoreLock lock = new StoreLock();
-    public final PetService petService = new PetService(pets, records, lock, clock);
+    public final PetService petService = new PetService(pets, records, steps, lock, clock);
     public final RecordService recordService = new RecordService(pets, records, lock, clock);
-    public final DashboardService dashboardService = new DashboardService(pets, records, lock, clock);
+    public final DashboardService dashboardService = new DashboardService(pets, records, steps, lock, clock);
+    public final StepService stepService = new StepService(pets, steps, lock, clock);
 }

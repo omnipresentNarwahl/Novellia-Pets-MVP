@@ -7,6 +7,7 @@ import com.novellia.pets.common.ApiValidationException;
 import com.novellia.pets.common.NotFoundException;
 import com.novellia.pets.record.RecordRequest;
 import com.novellia.pets.record.RecordType;
+import com.novellia.pets.steps.StepRepository;
 import com.novellia.pets.support.Fixtures;
 import java.time.LocalDate;
 import java.util.List;
@@ -92,11 +93,13 @@ class PetServiceTest {
         f.recordService.create(a.id(), new RecordRequest(RecordType.OTHER, "x", Fixtures.TODAY, null, null));
         f.recordService.create(b.id(), new RecordRequest(RecordType.OTHER, "y", Fixtures.TODAY, null, null));
 
+        f.steps.saveDay(a.id(), Fixtures.TODAY, new int[StepRepository.SLOTS_PER_DAY]);
         f.petService.delete(a.id());
 
         assertThat(f.pets.findById(a.id())).isEmpty();
         assertThat(f.records.findByPetId(a.id())).isEmpty();
         assertThat(f.records.findByPetId(b.id())).hasSize(1);
+        assertThat(f.steps.hasData(a.id())).isFalse();
         assertThatThrownBy(() -> f.petService.delete(a.id())).isInstanceOf(NotFoundException.class);
     }
 

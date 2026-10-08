@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novellia.pets.pet.PetRepository;
 import com.novellia.pets.record.RecordRepository;
+import com.novellia.pets.steps.StepRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,11 +23,15 @@ public abstract class ApiTest {
     @Autowired protected ObjectMapper json;
     @Autowired protected PetRepository pets;
     @Autowired protected RecordRepository records;
+    @Autowired protected StepRepository steps;
 
     @BeforeEach
     void emptyTheStore() {
         records.findAll().forEach(r -> records.deleteById(r.id()));
-        pets.findAll().forEach(p -> pets.deleteById(p.id()));
+        pets.findAll().forEach(p -> {
+            steps.deleteByPetId(p.id());
+            pets.deleteById(p.id());
+        });
     }
 
     protected String createPet(String body) throws Exception {

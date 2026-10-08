@@ -25,7 +25,9 @@ public record DashboardResponse(
             String speciesOther,
             LocalDate dateOfBirth,
             long recordCount,
-            LocalDate lastRecordDate) {
+            LocalDate lastRecordDate,
+            /** Mean daily steps over the last seven complete days; null for a pet without a tracker. */
+            Long averageDailySteps) {
     }
 
     public record RecentRecord(

@@ -44,6 +44,7 @@
               <th scope="col">Age</th>
               <th scope="col" class="num">Records</th>
               <th scope="col">Last record</th>
+              <th scope="col" class="num">Daily steps <span class="muted">(7-day avg)</span></th>
             </tr>
           </thead>
           <tbody>
@@ -61,6 +62,13 @@
                 <td>{{ pet.dateOfBirth | age }}</td>
                 <td class="num">{{ pet.recordCount }}</td>
                 <td>{{ pet.lastRecordDate ? (pet.lastRecordDate | date: 'mediumDate') : 'No records yet' }}</td>
+                <td class="num">
+                  @if (pet.averageDailySteps !== null) {
+                    {{ pet.averageDailySteps | number }}
+                  } @else {
+                    <span class="muted">No tracker</span>
+                  }
+                </td>
               </tr>
             }
           </tbody>

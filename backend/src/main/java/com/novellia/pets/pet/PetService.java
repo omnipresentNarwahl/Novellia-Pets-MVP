@@ -6,6 +6,7 @@ import com.novellia.pets.common.Sorting;
 import com.novellia.pets.common.StoreLock;
 import com.novellia.pets.record.MedicalRecord;
 import com.novellia.pets.record.RecordRepository;
+import com.novellia.pets.steps.StepRepository;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -29,12 +30,15 @@ public class PetService {
 
     private final PetRepository pets;
     private final RecordRepository records;
+    private final StepRepository steps;
     private final StoreLock lock;
     private final Clock clock;
 
-    public PetService(PetRepository pets, RecordRepository records, StoreLock lock, Clock clock) {
+    public PetService(PetRepository pets, RecordRepository records, StepRepository steps, StoreLock lock,
+            Clock clock) {
         this.pets = pets;
         this.records = records;
+        this.steps = steps;
         this.lock = lock;
         this.clock = clock;
     }
@@ -86,6 +90,7 @@ public class PetService {
         lock.write(() -> {
             find(id);
             records.deleteByPetId(id);
+            steps.deleteByPetId(id);
             pets.deleteById(id);
         });
     }

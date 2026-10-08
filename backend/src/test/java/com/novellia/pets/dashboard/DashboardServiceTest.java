@@ -1,6 +1,7 @@
 package com.novellia.pets.dashboard;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.novellia.pets.dashboard.DashboardResponse.LabelCount;
 import com.novellia.pets.pet.PetRequest;
@@ -8,6 +9,7 @@ import com.novellia.pets.pet.PetResponse;
 import com.novellia.pets.pet.Species;
 import com.novellia.pets.record.RecordRequest;
 import com.novellia.pets.record.RecordType;
+import com.novellia.pets.steps.StepRepository;
 import com.novellia.pets.support.Fixtures;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -73,6 +75,24 @@ class DashboardServiceTest {
         assertThat(d.recentRecords()).extracting(DashboardResponse.RecentRecord::title)
                 .containsExactly("r1", "r2", "r3", "r4", "r5");
         assertThat(d.recentRecords()).allSatisfy(r -> assertThat(r.petName()).isEqualTo("Rex"));
+    }
+
+    @Test
+    void averageDailyStepsOnlyForPetsWithATracker() {
+        PetResponse rex = f.petService.create(new PetRequest("Rex", Species.DOG, null, null, null, null));
+        PetResponse miso = f.petService.create(new PetRequest("Miso", Species.CAT, null, null, null, null));
+        for (int i = 1; i <= 7; i++) {
+            int[] slots = new int[StepRepository.SLOTS_PER_DAY];
+            slots[42] = 8000 + i * 100;
+            f.steps.saveDay(rex.id(), Fixtures.TODAY.minusDays(i), slots);
+        }
+
+        DashboardResponse d = f.dashboardService.build();
+
+        assertThat(d.pets())
+                .extracting(DashboardResponse.PetSummary::name, DashboardResponse.PetSummary::averageDailySteps)
+                .containsExactly(tuple("Miso", null), tuple("Rex", 8400L));
+        assertThat(miso.id()).isEqualTo(d.pets().get(0).petId());
     }
 
     private void add(PetResponse pet, RecordType type, String title, LocalDate date) {
