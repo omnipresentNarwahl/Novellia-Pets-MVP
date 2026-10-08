@@ -87,6 +87,22 @@ class PetServiceTest {
     }
 
     @Test
+    void responseCarriesTheSevenDayStepAverageOnlyForTrackedPets() {
+        PetResponse rex = f.petService.create(dog("Rex", null));
+        PetResponse spot = f.petService.create(dog("Spot", null));
+        for (int i = 1; i <= 7; i++) {
+            int[] slots = new int[StepRepository.SLOTS_PER_DAY];
+            slots[42] = 10_000 + i;
+            f.steps.saveDay(rex.id(), Fixtures.TODAY.minusDays(i), slots);
+        }
+
+        assertThat(f.petService.get(rex.id()).averageDailySteps()).isEqualTo(10_004L);
+        assertThat(f.petService.get(spot.id()).averageDailySteps()).isNull();
+        assertThat(f.petService.list(null, List.of(), null))
+                .extracting(PetResponse::averageDailySteps).containsExactly(10_004L, null);
+    }
+
+    @Test
     void deletingAPetDeletesItsRecordsOnly() {
         PetResponse a = f.petService.create(dog("A", null));
         PetResponse b = f.petService.create(dog("B", null));

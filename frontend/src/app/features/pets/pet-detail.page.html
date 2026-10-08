@@ -29,6 +29,12 @@
             <dd>{{ pet.dateOfBirth | date: 'longDate' }}</dd>
           </div>
         }
+        @if (pet.averageDailySteps !== null) {
+          <div>
+            <dt>Daily steps (7-day avg)</dt>
+            <dd>{{ pet.averageDailySteps | number }}</dd>
+          </div>
+        }
       </dl>
       @if (pet.notes) {
         <p class="notes">{{ pet.notes }}</p>
@@ -50,10 +56,10 @@
           <section aria-labelledby="activity-heading">
             <div class="activity-header">
               <h2 id="activity-heading">Steps</h2>
-              @if (s.averageLast7Days !== null) {
+              @if (stepRangeAverage(); as average) {
                 <div class="average">
-                  <span class="average-value">{{ s.averageLast7Days | number }}</span>
-                  <span class="muted">a day, 7-day average</span>
+                  <span class="average-value">{{ average | number }}</span>
+                  <span class="muted">a day, average over the {{ stepRangeInfo().period }}</span>
                 </div>
               }
             </div>

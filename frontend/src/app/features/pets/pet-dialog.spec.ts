@@ -192,6 +192,7 @@ describe('PetDialog editing', () => {
     notes: 'Likes tunnels',
     recordCount: 2,
     lastRecordDate: null,
+    averageDailySteps: null,
     createdAt: '2024-01-01T00:00:00Z',
   };
   const close = vi.fn();

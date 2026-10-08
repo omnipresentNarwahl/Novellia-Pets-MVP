@@ -7,6 +7,7 @@ import com.novellia.pets.common.StoreLock;
 import com.novellia.pets.record.MedicalRecord;
 import com.novellia.pets.record.RecordRepository;
 import com.novellia.pets.steps.StepRepository;
+import com.novellia.pets.steps.StepService;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -125,9 +126,11 @@ public class PetService {
         return request.species() == Species.OTHER ? request.speciesOther() : null;
     }
 
-    private static PetResponse toResponse(Pet pet, List<MedicalRecord> petRecords) {
+    /** Callers hold the store lock. */
+    private PetResponse toResponse(Pet pet, List<MedicalRecord> petRecords) {
         LocalDate last = petRecords.stream().map(MedicalRecord::recordDate)
                 .max(Comparator.naturalOrder()).orElse(null);
-        return PetResponse.of(pet, petRecords.size(), last);
+        Long averageSteps = StepService.averageLast7Days(steps, pet.id(), LocalDate.now(clock));
+        return PetResponse.of(pet, petRecords.size(), last, averageSteps);
     }
 }

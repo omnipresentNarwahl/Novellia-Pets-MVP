@@ -34,7 +34,7 @@ import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
 import { formDialogConfig } from '../../shared/form-dialog';
 import { RecordDialog, RecordDialogData, RecordDialogMode } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
-import { STEP_RANGES, StepRange, stepColumns } from '../steps/step-columns';
+import { STEP_RANGES, StepRange, rangeAverage, stepColumns } from '../steps/step-columns';
 import { StepsChart } from '../steps/steps-chart';
 import { StepsService } from '../steps/steps.service';
 import { openPetDialog } from './pet-dialog';
@@ -103,6 +103,7 @@ export class PetDetailPage {
   protected readonly stepRange = signal<StepRange>('month');
   protected readonly stepRangeInfo = computed(() => STEP_RANGES.find((r) => r.value === this.stepRange())!);
   protected readonly stepChartColumns = computed(() => stepColumns(this.steps()?.days ?? [], this.stepRange()));
+  protected readonly stepRangeAverage = computed(() => rangeAverage(this.steps()?.days ?? [], this.stepRange()));
 
   protected readonly hasFilters = computed(() => this.search().trim() !== '' || this.types().length > 0);
   protected readonly sortField = computed(() => this.sort().split(',')[0]);

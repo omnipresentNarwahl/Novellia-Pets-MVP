@@ -4,10 +4,29 @@ import { DailySteps } from '../../models/steps';
 export type StepRange = 'month' | 'quarter' | 'year';
 export type StepUnit = 'day' | 'week' | 'month';
 
-export const STEP_RANGES: readonly { value: StepRange; label: string; unit: StepUnit; caption: string }[] = [
-  { value: 'month', label: 'Month', unit: 'day', caption: 'Last 30 days, steps per day' },
-  { value: 'quarter', label: '3 months', unit: 'week', caption: 'Last 13 weeks, average steps per day' },
-  { value: 'year', label: 'Year', unit: 'month', caption: 'Last 12 months, average steps per day' },
+export const STEP_RANGES: readonly {
+  value: StepRange;
+  label: string;
+  unit: StepUnit;
+  caption: string;
+  /** How the range reads after "average over the". */
+  period: string;
+}[] = [
+  { value: 'month', label: 'Month', unit: 'day', caption: 'Last 30 days, steps per day', period: 'last 30 days' },
+  {
+    value: 'quarter',
+    label: '3 months',
+    unit: 'week',
+    caption: 'Last 13 weeks, average steps per day',
+    period: 'last 13 weeks',
+  },
+  {
+    value: 'year',
+    label: 'Year',
+    unit: 'month',
+    caption: 'Last 12 months, average steps per day',
+    period: 'last 12 months',
+  },
 ];
 
 /** One column of the chart: a day, a week (Monday to Sunday) or a calendar month. */
@@ -68,6 +87,21 @@ export function stepColumns(days: DailySteps[], range: StepRange): StepColumn[] 
     const average = Math.round(counted.reduce((sum, d) => sum + d.steps, 0) / counted.length);
     return [{ start, end, steps: average, partial: i === periods.length - 1 }];
   });
+}
+
+/**
+ * Mean steps per day over the whole period the chart shows for `range`. Today is still in progress, so it is
+ * left out (unless it is the only day). Null when there is no data.
+ */
+export function rangeAverage(days: DailySteps[], range: StepRange): number | null {
+  const columns = stepColumns(days, range);
+  if (columns.length === 0) {
+    return null;
+  }
+  const inRange = days.filter((d) => d.date >= columns[0].start);
+  const complete = inRange.filter((d) => !d.partial);
+  const counted = complete.length > 0 ? complete : inRange;
+  return Math.round(counted.reduce((sum, d) => sum + d.steps, 0) / counted.length);
 }
 
 function addDays(date: Date, days: number): Date {

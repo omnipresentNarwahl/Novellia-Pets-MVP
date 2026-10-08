@@ -15,6 +15,7 @@ const pet = (overrides: Partial<Pet> = {}): Pet => ({
   notes: null,
   recordCount: 2,
   lastRecordDate: '2026-01-02',
+  averageDailySteps: null,
   createdAt: '2026-01-01T00:00:00Z',
   ...overrides,
 });
@@ -121,6 +122,15 @@ describe('PetListPage', () => {
     const req = listRequest();
     expect(req.request.params.getAll('species')).toBeNull();
     req.flush([pet()]);
+  });
+
+  it('shows the 7-day step average only on the cards of pets with a tracker', async () => {
+    listRequest().flush([pet({ id: 'a', name: 'Biscuit', averageDailySteps: 12_345 }), pet({ id: 'b', name: 'Pancake' })]);
+    await settle();
+    const cards = Array.from(fixture.nativeElement.querySelectorAll('.pet-card')) as HTMLElement[];
+    expect(cards[0].textContent).toContain('Daily steps (7-day avg)');
+    expect(cards[0].textContent).toContain('12,345');
+    expect(cards[1].textContent).not.toContain('Daily steps');
   });
 
   it('shows the empty state with an Add pet button when there are no pets at all', async () => {

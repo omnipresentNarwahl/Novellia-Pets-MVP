@@ -1,5 +1,5 @@
 import { DailySteps } from '../../models/steps';
-import { stepColumns } from './step-columns';
+import { rangeAverage, stepColumns } from './step-columns';
 
 /** Daily totals for every day from `from` to `to` (inclusive), with the last one partial. */
 function days(from: string, to: string, steps: (date: Date) => number): DailySteps[] {
@@ -51,5 +51,23 @@ describe('stepColumns', () => {
     expect(stepColumns(fresh, 'quarter')).toEqual([{ start: '2026-10-05', end: '2026-10-11', steps: 700, partial: true }]);
     expect(stepColumns(fresh, 'year')).toHaveLength(1);
     expect(stepColumns([], 'year')).toEqual([]);
+  });
+});
+
+describe('rangeAverage', () => {
+  it('averages every complete day the range covers, leaving out today', () => {
+    // 1,000 a day for the 29 days before today, and a partial today that would drag the average down.
+    const month = days('2026-09-08', '2026-10-07', (d) => (d.getDate() === 7 && d.getMonth() === 9 ? 10 : 1000));
+    expect(rangeAverage(month, 'month')).toBe(1000);
+  });
+
+  it('covers from the start of the first column, so 3 months starts on a Monday', () => {
+    const year = days('2025-10-07', '2026-10-07', (d) => (d < new Date(2026, 6, 13) ? 0 : 700));
+    expect(rangeAverage(year, 'quarter')).toBe(700); // July 13 onwards
+    expect(rangeAverage(year, 'year')).toBeLessThan(700);
+  });
+
+  it('is null without data', () => {
+    expect(rangeAverage([], 'year')).toBeNull();
   });
 });

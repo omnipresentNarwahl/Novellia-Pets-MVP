@@ -76,6 +76,9 @@
                 <dt>Last record</dt>
                 <dd>{{ pet.lastRecordDate ? (pet.lastRecordDate | date: 'mediumDate') : 'No records yet' }}</dd>
               </div>
+              @if (pet.averageDailySteps !== null) {
+                <div><dt>Daily steps (7-day avg)</dt><dd>{{ pet.averageDailySteps | number }}</dd></div>
+              }
             </dl>
           </a>
           <button mat-icon-button class="menu" [matMenuTriggerFor]="petMenu" [attr.aria-label]="'More actions for ' + pet.name">
