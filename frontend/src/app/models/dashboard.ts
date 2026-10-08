@@ -14,6 +14,8 @@ export interface DashboardPet {
   dateOfBirth: string | null;
   recordCount: number;
   lastRecordDate: string | null;
+  /** Mean daily steps over the last seven complete days; null for a pet without a tracker. */
+  averageDailySteps: number | null;
 }
 
 export interface RecentRecord {

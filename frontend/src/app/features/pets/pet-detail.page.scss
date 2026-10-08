@@ -47,6 +47,41 @@
   padding: 16px;
 }
 
+.activity {
+  margin-top: 24px;
+
+  mat-card-content {
+    padding: 16px;
+  }
+
+  h2 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+  }
+}
+
+.activity-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.average {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.average-value {
+  font: var(--mat-sys-title-large);
+}
+
+.chart-caption {
+  margin: 4px 0 12px;
+}
+
 .records {
   margin-top: 24px;
 

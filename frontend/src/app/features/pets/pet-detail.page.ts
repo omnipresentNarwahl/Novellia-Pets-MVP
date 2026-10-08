@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -22,6 +22,7 @@ import {
   DEFAULT_RECORD_SORT, MedicalRecord, RecordSort, RecordSortField,
 } from '../../models/medical-record';
 import { Pet } from '../../models/pet';
+import { StepsResponse } from '../../models/steps';
 import { RECORD_TYPES, RECORD_TYPE_LABELS, RecordType } from '../../models/record-type';
 import { AgePipe } from '../../shared/age.pipe';
 import { confirm } from '../../shared/confirm-dialog';
@@ -32,6 +33,8 @@ import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
 import { formDialogConfig } from '../../shared/form-dialog';
 import { RecordDialog, RecordDialogData, RecordDialogMode } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
+import { StepsChart } from '../steps/steps-chart';
+import { StepsService } from '../steps/steps.service';
 import { openPetDialog } from './pet-dialog';
 import { PetService } from './pet.service';
 
@@ -40,6 +43,7 @@ import { PetService } from './pet.service';
   imports: [
     RouterLink,
     DatePipe,
+    DecimalPipe,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
@@ -54,6 +58,7 @@ import { PetService } from './pet.service';
     RecordTypeChip,
     SpeciesIcon,
     SpeciesLabelPipe,
+    StepsChart,
   ],
   templateUrl: './pet-detail.page.html',
   styleUrl: './pet-detail.page.scss',
@@ -61,6 +66,7 @@ import { PetService } from './pet.service';
 export class PetDetailPage {
   private readonly petService = inject(PetService);
   private readonly recordService = inject(RecordService);
+  private readonly stepsService = inject(StepsService);
   private readonly dialog = inject(MatDialog);
   private readonly breakpoints = inject(BreakpointObserver);
   private readonly notifier = inject(Notifier);
@@ -86,6 +92,10 @@ export class PetDetailPage {
   protected readonly records = signal<MedicalRecord[]>([]);
   protected readonly recordsLoading = signal(true);
   protected readonly recordsError = signal(false);
+
+  protected readonly steps = signal<StepsResponse | null>(null);
+  protected readonly stepsError = signal(false);
+  private readonly stepsTick = signal(0);
 
   protected readonly hasFilters = computed(() => this.search().trim() !== '' || this.types().length > 0);
   protected readonly sortField = computed(() => this.sort().split(',')[0]);
@@ -118,6 +128,22 @@ export class PetDetailPage {
         }
         this.petLoading.set(false);
       });
+
+    combineLatest([toObservable(this.petId), toObservable(this.stepsTick)])
+      .pipe(
+        tap(() => this.stepsError.set(false)),
+        switchMap(([id]) =>
+          this.stepsService.daily(id).pipe(
+            catchError((err: HttpErrorResponse) => {
+              // A 404 means the pet is gone, and the pet request above routes to the not-found page.
+              this.stepsError.set(err.status !== 404);
+              return of(null);
+            }),
+          ),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((steps) => this.steps.set(steps));
 
     // Typing is debounced; chips and sort apply immediately. switchMap cancels a request still in flight.
     const search$ = toObservable(this.search).pipe(
@@ -183,6 +209,10 @@ export class PetDetailPage {
 
   protected retryPet(): void {
     this.petTick.update((n) => n + 1);
+  }
+
+  protected retrySteps(): void {
+    this.stepsTick.update((n) => n + 1);
   }
 
   protected retryRecords(): void {

@@ -36,6 +36,35 @@
     </mat-card-content>
   </mat-card>
 
+  @if (stepsError()) {
+    <section class="activity" aria-labelledby="activity-heading">
+      <h2 id="activity-heading">Activity</h2>
+      <app-empty-state icon="error_outline" title="Could not load activity">
+        <button mat-flat-button (click)="retrySteps()">Retry</button>
+      </app-empty-state>
+    </section>
+  } @else if (steps(); as s) {
+    @if (s.tracked) {
+      <mat-card appearance="outlined" class="activity">
+        <mat-card-content>
+          <section aria-labelledby="activity-heading">
+            <div class="activity-header">
+              <h2 id="activity-heading">Daily steps</h2>
+              @if (s.averageLast7Days !== null) {
+                <div class="average">
+                  <span class="average-value">{{ s.averageLast7Days | number }}</span>
+                  <span class="muted">a day, 7-day average</span>
+                </div>
+              }
+            </div>
+            <p class="muted chart-caption">Last {{ s.days.length }} days</p>
+            <app-steps-chart [days]="s.days" />
+          </section>
+        </mat-card-content>
+      </mat-card>
+    }
+  }
+
   <section class="records" aria-labelledby="records-heading">
     <div class="page-header">
       <h2 id="records-heading">Medical records</h2>

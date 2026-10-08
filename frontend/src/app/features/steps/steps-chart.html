@@ -1,0 +1,56 @@
+<svg [attr.width]="width()" [attr.height]="height" aria-hidden="true" (pointerleave)="hovered.set(null)">
+  @for (line of gridlines(); track line.value) {
+    <line class="grid" [attr.x1]="margin.left" [attr.x2]="width() - margin.right" [attr.y1]="line.y" [attr.y2]="line.y" />
+    <text class="axis-label" [attr.x]="margin.left - 8" [attr.y]="line.y" text-anchor="end" dominant-baseline="middle">
+      {{ line.value | number }}
+    </text>
+  }
+
+  @for (bar of bars(); track bar.day.date; let i = $index) {
+    @if (bar.path) {
+      <path class="bar" [class.partial]="bar.day.partial" [class.active]="hovered() === i" [attr.d]="bar.path" />
+    }
+  }
+
+  @for (bar of xLabels(); track bar.day.date) {
+    <text class="axis-label" [attr.x]="bar.centerX" [attr.y]="height - 8" text-anchor="middle">
+      {{ bar.day.partial ? 'Today' : (bar.day.date | date: 'MMM d') }}
+    </text>
+  }
+
+  <!-- Full-height hover targets, so short columns are as easy to hit as tall ones. -->
+  @for (bar of bars(); track bar.day.date; let i = $index) {
+    <rect
+      class="hit"
+      [attr.x]="bar.bandX"
+      [attr.y]="margin.top"
+      [attr.width]="bar.bandWidth"
+      [attr.height]="baseline - margin.top"
+      (pointerenter)="hovered.set(i)"
+    />
+  }
+</svg>
+
+@if (tooltip(); as tip) {
+  <div class="tooltip" [style.left.px]="tip.left" [style.top.px]="tip.top">
+    <div class="tooltip-date">{{ tip.day.date | date: 'EEE, MMM d' }}</div>
+    <div class="tooltip-value">
+      {{ tip.day.steps | number }} steps@if (tip.day.partial) { <span class="muted">so far</span> }
+    </div>
+  </div>
+}
+
+<table class="visually-hidden">
+  <caption>Daily steps</caption>
+  <thead>
+    <tr><th scope="col">Date</th><th scope="col">Steps</th></tr>
+  </thead>
+  <tbody>
+    @for (day of days(); track day.date) {
+      <tr>
+        <th scope="row">{{ day.date | date: 'longDate' }}</th>
+        <td>{{ day.steps | number }}{{ day.partial ? ' so far' : '' }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

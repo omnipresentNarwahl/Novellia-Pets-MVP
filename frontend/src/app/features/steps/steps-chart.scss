@@ -1,0 +1,58 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+svg {
+  display: block;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--mat-sys-outline-variant);
+  stroke-width: 1;
+}
+
+.axis-label {
+  fill: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-label-small);
+}
+
+.bar {
+  fill: var(--mat-sys-primary);
+
+  /* Today is still in progress, so it is drawn lighter. */
+  &.partial {
+    fill-opacity: 0.4;
+  }
+
+  &.active {
+    fill: var(--mat-sys-on-primary-container);
+  }
+}
+
+.hit {
+  fill: transparent;
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 8px));
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  font: var(--mat-sys-body-small);
+
+  .tooltip-value {
+    font: var(--mat-sys-label-large);
+  }
+
+  .muted {
+    color: inherit;
+    opacity: 0.75;
+    font-weight: 400;
+  }
+}
