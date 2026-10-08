@@ -1,7 +1,8 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -19,6 +20,7 @@ import { confirm } from '../../shared/confirm-dialog';
 import { EmptyState } from '../../shared/empty-state';
 import { SpeciesIcon } from '../../shared/species-icon';
 import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
+import { openPetDialog } from './pet-dialog';
 import { PetService } from './pet.service';
 
 @Component({
@@ -45,6 +47,8 @@ export class PetListPage {
   private readonly petService = inject(PetService);
   private readonly dialog = inject(MatDialog);
   private readonly notifier = inject(Notifier);
+  private readonly breakpoints = inject(BreakpointObserver);
+  private readonly router = inject(Router);
 
   protected readonly speciesOptions = SPECIES;
   protected readonly speciesLabels = SPECIES_LABELS;
@@ -113,6 +117,26 @@ export class PetListPage {
 
   protected retry(): void {
     this.reloadTick.update((n) => n + 1);
+  }
+
+  protected addPet(): void {
+    openPetDialog(this.dialog, this.breakpoints).subscribe((result) => {
+      if (result && result !== 'gone') {
+        this.notifier.success('Pet added');
+        void this.router.navigate(['/pets', result.id]);
+      }
+    });
+  }
+
+  protected editPet(pet: Pet): void {
+    openPetDialog(this.dialog, this.breakpoints, pet).subscribe((result) => {
+      if (result && result !== 'gone') {
+        this.notifier.success('Pet updated');
+      }
+      if (result) {
+        this.retry();
+      }
+    });
   }
 
   protected deletePet(pet: Pet): void {

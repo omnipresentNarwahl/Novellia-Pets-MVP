@@ -9,7 +9,7 @@
 } @else if (data(); as d) {
   @if (d.totalPets === 0) {
     <app-empty-state icon="pets" title="No pets yet" message="Add your first pet to start keeping track of their health.">
-      <a mat-flat-button routerLink="/pets/new">Add your first pet</a>
+      <button mat-flat-button (click)="addPet()">Add your first pet</button>
     </app-empty-state>
   } @else {
     <section class="summary" aria-label="Summary">

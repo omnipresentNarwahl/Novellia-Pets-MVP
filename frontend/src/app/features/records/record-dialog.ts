@@ -1,18 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { hasModifierKey } from '@angular/cdk/keycodes';
-import { BreakpointObserver } from '@angular/cdk/layout';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogConfig, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { filter, merge, switchMap, tap } from 'rxjs';
+import { filter, switchMap } from 'rxjs';
 import { parseIsoDate, toIsoDate, today } from '../../core/dates';
 import { applyServerErrors, errorMessage } from '../../core/form-errors';
 import { Notifier } from '../../core/notifier';
@@ -22,6 +19,7 @@ import { MedicalRecord, RecordRequest } from '../../models/medical-record';
 import { RECORD_TYPES, RECORD_TYPE_LABELS, RecordType } from '../../models/record-type';
 import { Species } from '../../models/species';
 import { confirm } from '../../shared/confirm-dialog';
+import { confirmCloseWhenDirty } from '../../shared/form-dialog';
 import { RecordTypeChip } from '../../shared/record-type-chip';
 import { SpeciesIcon } from '../../shared/species-icon';
 import { RecordService } from './record.service';
@@ -44,22 +42,6 @@ export interface RecordDialogData {
  * another tab).
  */
 export type RecordDialogResult = 'saved' | 'deleted' | 'gone';
-
-/** A centered 480px modal, or full screen on phones. */
-export function recordDialogConfig(
-  breakpoints: BreakpointObserver,
-  data: RecordDialogData,
-): MatDialogConfig<RecordDialogData> {
-  const phone = breakpoints.isMatched('(max-width: 599.98px)');
-  return {
-    data,
-    width: phone ? '100vw' : '480px',
-    maxWidth: '100vw',
-    height: phone ? '100vh' : undefined,
-    maxHeight: phone ? '100vh' : undefined,
-    panelClass: 'record-dialog-panel',
-  };
-}
 
 @Component({
   selector: 'app-record-dialog',
@@ -129,35 +111,7 @@ export class RecordDialog {
     errorMessage(this.form.controls[name], label);
 
   constructor() {
-    // Clicking the backdrop or pressing Escape would silently throw away edits, so those closes go through
-    // requestClose() instead of closing directly.
-    this.dialogRef.disableClose = true;
-    merge(
-      this.dialogRef.backdropClick(),
-      this.dialogRef.keydownEvents().pipe(
-        filter((event) => event.key === 'Escape' && !hasModifierKey(event)),
-        tap((event) => event.preventDefault()),
-      ),
-    )
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => this.requestClose());
-  }
-
-  /** Closes straight away when nothing has changed; otherwise asks before discarding the changes. */
-  private requestClose(): void {
-    if (!this.form.dirty) {
-      this.dialogRef.close();
-      return;
-    }
-    confirm(this.dialog, {
-      title: 'Discard changes?',
-      message: 'You have unsaved changes. If you close this now they will be lost.',
-      confirmLabel: 'Discard',
-      cancelLabel: 'Keep editing',
-      destructive: true,
-    })
-      .pipe(filter(Boolean))
-      .subscribe(() => this.dialogRef.close());
+    confirmCloseWhenDirty(this.form);
   }
 
   protected edit(): void {

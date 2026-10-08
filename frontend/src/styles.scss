@@ -71,9 +71,9 @@ a {
   --mat-button-filled-label-text-color: var(--mat-sys-on-error);
 }
 
-/* Record dialog goes full screen on phones. */
+/* Form dialogs go full screen on phones. */
 @media (max-width: 599.98px) {
-  .record-dialog-panel {
+  .form-dialog-panel {
     .mat-mdc-dialog-container {
       --mat-dialog-container-shape: 0;
     }

@@ -1,6 +1,6 @@
 <div class="page-header">
   <h1>Pets</h1>
-  <a mat-flat-button routerLink="/pets/new"><mat-icon>add</mat-icon> Add pet</a>
+  <button mat-flat-button (click)="addPet()"><mat-icon>add</mat-icon> Add pet</button>
 </div>
 
 <section class="filter-bar" aria-label="Search and filter pets">
@@ -51,7 +51,7 @@
     </app-empty-state>
   } @else {
     <app-empty-state icon="pets" title="No pets yet" message="Add your first pet to start keeping track of their health.">
-      <a mat-flat-button routerLink="/pets/new">Add pet</a>
+      <button mat-flat-button (click)="addPet()">Add pet</button>
     </app-empty-state>
   }
 } @else {
@@ -82,7 +82,7 @@
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #petMenu="matMenu">
-            <a mat-menu-item [routerLink]="['/pets', pet.id, 'edit']"><mat-icon>edit</mat-icon> Edit</a>
+            <button mat-menu-item (click)="editPet(pet)"><mat-icon>edit</mat-icon> Edit</button>
             <button mat-menu-item (click)="deletePet(pet)"><mat-icon>delete</mat-icon> Delete</button>
           </mat-menu>
         </mat-card>

@@ -1,0 +1,79 @@
+<h2 mat-dialog-title>{{ pet ? 'Edit ' + pet.name : 'Add pet' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-dialog-content>
+    <div class="fields">
+      @if (banner(); as message) {
+        <div class="form-banner" role="alert">{{ message }}</div>
+      }
+
+      <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name" maxlength="100" required autocomplete="off" />
+        @if (error('name', 'Name'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Species</mat-label>
+        <mat-select formControlName="species" required>
+          @for (s of speciesOptions; track s) {
+            <mat-option [value]="s">{{ speciesLabels[s] }}</mat-option>
+          }
+        </mat-select>
+        @if (error('species', 'Species'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      @if (species() === 'OTHER') {
+        <mat-form-field>
+          <!--
+            No native required or maxlength attribute here: on a conditionally rendered input they add
+            validator directives that stay attached to the control after the input is removed.
+          -->
+          <mat-label>What kind of animal? <span aria-hidden="true">*</span></mat-label>
+          <input matInput formControlName="speciesOther" [attr.maxlength]="50" aria-required="true" placeholder="For example axolotl or ferret" autocomplete="off" />
+          <mat-hint align="end">{{ form.controls.speciesOther.value.length }}/50</mat-hint>
+          @if (error('speciesOther', 'Kind of animal'); as message) {
+            <mat-error>{{ message }}</mat-error>
+          }
+        </mat-form-field>
+      }
+
+      <mat-form-field>
+        <mat-label>Breed or type</mat-label>
+        <input matInput formControlName="breed" maxlength="100" autocomplete="off" />
+        @if (error('breed', 'Breed'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Date of birth</mat-label>
+        <input matInput formControlName="dateOfBirth" [matDatepicker]="dobPicker" [max]="maxDate" />
+        <mat-hint>Approximate is fine</mat-hint>
+        <mat-datepicker-toggle matIconSuffix [for]="dobPicker" />
+        <mat-datepicker #dobPicker />
+        @if (error('dateOfBirth', 'Date of birth'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Notes</mat-label>
+        <textarea matInput formControlName="notes" rows="4" maxlength="2000"></textarea>
+        <mat-hint align="end">{{ form.controls.notes.value.length }}/2000</mat-hint>
+        @if (error('notes', 'Notes'); as message) {
+          <mat-error>{{ message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancel</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+  </mat-dialog-actions>
+</form>

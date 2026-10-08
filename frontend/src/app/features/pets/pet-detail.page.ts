@@ -29,8 +29,10 @@ import { EmptyState } from '../../shared/empty-state';
 import { RecordTypeChip } from '../../shared/record-type-chip';
 import { SpeciesIcon } from '../../shared/species-icon';
 import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
-import { RecordDialog, RecordDialogData, RecordDialogMode, recordDialogConfig } from '../records/record-dialog';
+import { formDialogConfig } from '../../shared/form-dialog';
+import { RecordDialog, RecordDialogData, RecordDialogMode } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
+import { openPetDialog } from './pet-dialog';
 import { PetService } from './pet.service';
 
 @Component({
@@ -207,7 +209,7 @@ export class PetDetailPage {
       mode,
     };
     this.dialog
-      .open(RecordDialog, recordDialogConfig(this.breakpoints, data))
+      .open(RecordDialog, formDialogConfig(this.breakpoints, data))
       .afterClosed()
       .subscribe((result) => {
         if (result === 'saved') {
@@ -249,6 +251,21 @@ export class PetDetailPage {
           this.reloadAll();
         },
       });
+  }
+
+  protected editPet(): void {
+    const pet = this.pet();
+    if (!pet) {
+      return;
+    }
+    openPetDialog(this.dialog, this.breakpoints, pet).subscribe((result) => {
+      if (result && result !== 'gone') {
+        this.notifier.success('Pet updated');
+        this.pet.set(result);
+      } else if (result === 'gone') {
+        this.retryPet();
+      }
+    });
   }
 
   protected deletePet(): void {

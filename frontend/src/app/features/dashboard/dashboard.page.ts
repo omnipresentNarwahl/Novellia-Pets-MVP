@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +17,9 @@ import { RecordTypeChip } from '../../shared/record-type-chip';
 import { SpeciesIcon } from '../../shared/species-icon';
 import { SpeciesLabelPipe } from '../../shared/species-label.pipe';
 import { PetService } from '../pets/pet.service';
-import { RecordDialog, recordDialogConfig } from '../records/record-dialog';
+import { formDialogConfig } from '../../shared/form-dialog';
+import { openPetDialog } from '../pets/pet-dialog';
+import { RecordDialog } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
 import { DashboardService } from './dashboard.service';
 
@@ -46,6 +48,7 @@ export class DashboardPage {
   private readonly dialog = inject(MatDialog);
   private readonly breakpoints = inject(BreakpointObserver);
   private readonly notifier = inject(Notifier);
+  private readonly router = inject(Router);
 
   protected readonly data = signal<Dashboard | null>(null);
   protected readonly loading = signal(true);
@@ -75,6 +78,15 @@ export class DashboardPage {
     return total === 0 ? 0 : Math.round((item.count / total) * 100);
   }
 
+  protected addPet(): void {
+    openPetDialog(this.dialog, this.breakpoints).subscribe((result) => {
+      if (result && result !== 'gone') {
+        this.notifier.success('Pet added');
+        void this.router.navigate(['/pets', result.id]);
+      }
+    });
+  }
+
   /** The dashboard only carries a summary, so fetch the full record and the pet's birth date before opening it. */
   protected openRecord(recent: RecentRecord): void {
     forkJoin([this.petService.get(recent.petId), this.recordService.get(recent.petId, recent.id)])
@@ -83,7 +95,7 @@ export class DashboardPage {
           this.dialog
             .open(
               RecordDialog,
-              recordDialogConfig(this.breakpoints, {
+              formDialogConfig(this.breakpoints, {
                 petId: pet.id,
                 petName: pet.name,
                 petSpecies: pet.species,

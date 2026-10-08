@@ -128,7 +128,7 @@ describe('PetListPage', () => {
     await settle();
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('No pets yet');
-    expect(fixture.nativeElement.querySelector('app-empty-state a')?.textContent).toContain('Add pet');
+    expect(fixture.nativeElement.querySelector('app-empty-state button')?.textContent).toContain('Add pet');
   });
 
   it('shows an error state with Retry that reloads', async () => {
