@@ -42,6 +42,24 @@ class StepApiTest extends ApiTest {
     }
 
     @Test
+    void typicalDayProfile() throws Exception {
+        String rex = createPet("Rex", "DOG");
+        int[] slots = new int[StepRepository.SLOTS_PER_DAY];
+        slots[42] = 600;
+        steps.saveDay(UUID.fromString(rex), LocalDate.now().minusDays(1), slots);
+
+        mvc.perform(get("/api/pets/" + rex + "/steps/profile"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tracked").value(true))
+                .andExpect(jsonPath("$.days").value(1))
+                .andExpect(jsonPath("$.slots", hasSize(StepRepository.SLOTS_PER_DAY)))
+                .andExpect(jsonPath("$.slots[42].minute").value(420))
+                .andExpect(jsonPath("$.slots[42].p50").value(0))
+                .andExpect(jsonPath("$.slots[42].p95").isNumber());
+        mvc.perform(get("/api/pets/" + UUID.randomUUID() + "/steps/profile")).andExpect(status().isNotFound());
+    }
+
+    @Test
     void badDaysAndUnknownPets() throws Exception {
         String rex = createPet("Rex", "DOG");
         mvc.perform(get("/api/pets/" + rex + "/steps/daily").param("days", "400"))

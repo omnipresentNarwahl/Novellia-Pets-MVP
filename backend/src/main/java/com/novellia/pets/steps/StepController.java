@@ -20,4 +20,9 @@ public class StepController {
     public StepsResponse daily(@PathVariable UUID petId, @RequestParam(defaultValue = "30") int days) {
         return service.daily(petId, days);
     }
+
+    @GetMapping("/profile")
+    public StepProfileResponse profile(@PathVariable UUID petId) {
+        return service.profile(petId);
+    }
 }

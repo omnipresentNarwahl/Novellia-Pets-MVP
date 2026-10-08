@@ -1,5 +1,6 @@
-import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { hostWidth } from './host-width';
 import { StepColumn, StepUnit } from './step-columns';
 
 const HEIGHT = 220;
@@ -53,7 +54,7 @@ export class StepsChart {
 
   protected readonly height = HEIGHT;
   protected readonly margin = MARGIN;
-  protected readonly width = signal(640);
+  protected readonly width = hostWidth();
   protected readonly hovered = signal<number | null>(null);
 
   private readonly plotHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
@@ -109,20 +110,6 @@ export class StepsChart {
     const left = Math.min(Math.max(bar.centerX, TOOLTIP_HALF_WIDTH), this.width() - TOOLTIP_HALF_WIDTH);
     return { column: bar.column, left, top: bar.top };
   });
-
-  constructor() {
-    const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-    const destroyRef = inject(DestroyRef);
-    afterNextRender(() => {
-      this.width.set(host.clientWidth || this.width());
-      if (typeof ResizeObserver === 'undefined') {
-        return;
-      }
-      const observer = new ResizeObserver(([entry]) => this.width.set(entry.contentRect.width));
-      observer.observe(host);
-      destroyRef.onDestroy(() => observer.disconnect());
-    });
-  }
 
   private y(value: number): number {
     return MARGIN.top + this.plotHeight * (1 - value / this.top());

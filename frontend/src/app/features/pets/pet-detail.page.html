@@ -81,6 +81,22 @@
         </mat-card-content>
       </mat-card>
     }
+    @if (stepProfile(); as profile) {
+      @if (profile.days > 0) {
+        <mat-card appearance="outlined" class="activity">
+          <mat-card-content>
+            <section aria-labelledby="profile-heading">
+              <h2 id="profile-heading">Typical day</h2>
+              <p class="muted chart-caption profile-caption">
+                Steps per 10 minutes by time of day, over the last {{ profile.days }} days
+                ({{ profile.from | date: 'MMM d' }} – {{ profile.to | date: 'MMM d' }})
+              </p>
+              <app-step-profile-chart [slots]="profile.slots" />
+            </section>
+          </mat-card-content>
+        </mat-card>
+      }
+    }
   }
 
   <section class="records" aria-labelledby="records-heading">

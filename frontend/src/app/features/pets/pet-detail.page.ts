@@ -16,14 +16,15 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {
-  catchError, combineLatest, debounceTime, distinctUntilChanged, filter, of, skip, startWith, switchMap, tap,
+  catchError, combineLatest, debounceTime, distinctUntilChanged, filter, forkJoin, of, skip, startWith, switchMap,
+  tap,
 } from 'rxjs';
 import { Notifier } from '../../core/notifier';
 import {
   DEFAULT_RECORD_SORT, MedicalRecord, RecordSort, RecordSortField,
 } from '../../models/medical-record';
 import { Pet } from '../../models/pet';
-import { StepsResponse } from '../../models/steps';
+import { StepProfile, StepsResponse } from '../../models/steps';
 import { RECORD_TYPES, RECORD_TYPE_LABELS, RecordType } from '../../models/record-type';
 import { AgePipe } from '../../shared/age.pipe';
 import { confirm } from '../../shared/confirm-dialog';
@@ -35,6 +36,7 @@ import { formDialogConfig } from '../../shared/form-dialog';
 import { RecordDialog, RecordDialogData, RecordDialogMode } from '../records/record-dialog';
 import { RecordService } from '../records/record.service';
 import { STEP_RANGES, StepRange, rangeAverage, stepColumns } from '../steps/step-columns';
+import { StepProfileChart } from '../steps/step-profile-chart';
 import { StepsChart } from '../steps/steps-chart';
 import { StepsService } from '../steps/steps.service';
 import { openPetDialog } from './pet-dialog';
@@ -61,6 +63,7 @@ import { PetService } from './pet.service';
     RecordTypeChip,
     SpeciesIcon,
     SpeciesLabelPipe,
+    StepProfileChart,
     StepsChart,
   ],
   templateUrl: './pet-detail.page.html',
@@ -97,6 +100,7 @@ export class PetDetailPage {
   protected readonly recordsError = signal(false);
 
   protected readonly steps = signal<StepsResponse | null>(null);
+  protected readonly stepProfile = signal<StepProfile | null>(null);
   protected readonly stepsError = signal(false);
   private readonly stepsTick = signal(0);
   protected readonly stepRanges = STEP_RANGES;
@@ -141,8 +145,11 @@ export class PetDetailPage {
       .pipe(
         tap(() => this.stepsError.set(false)),
         switchMap(([id]) =>
-          // A year of daily totals, so switching the chart's range needs no further requests.
-          this.stepsService.daily(id, 366).pipe(
+          forkJoin({
+            // A year of daily totals, so switching the chart's range needs no further requests.
+            daily: this.stepsService.daily(id, 366),
+            profile: this.stepsService.profile(id),
+          }).pipe(
             catchError((err: HttpErrorResponse) => {
               // A 404 means the pet is gone, and the pet request above routes to the not-found page.
               this.stepsError.set(err.status !== 404);
@@ -152,7 +159,10 @@ export class PetDetailPage {
         ),
         takeUntilDestroyed(),
       )
-      .subscribe((steps) => this.steps.set(steps));
+      .subscribe((result) => {
+        this.steps.set(result?.daily ?? null);
+        this.stepProfile.set(result?.profile ?? null);
+      });
 
     // Typing is debounced; chips and sort apply immediately. switchMap cancels a request still in flight.
     const search$ = toObservable(this.search).pipe(

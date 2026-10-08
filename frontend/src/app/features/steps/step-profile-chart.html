@@ -1,0 +1,68 @@
+<ul class="legend" aria-hidden="true">
+  <li><span class="swatch median"></span> Typical (median)</li>
+  <li><span class="swatch inner"></span> Middle 50% of days</li>
+  <li><span class="swatch outer"></span> 90% of days</li>
+</ul>
+
+<svg
+  #svg
+  [attr.width]="width()"
+  [attr.height]="height"
+  aria-hidden="true"
+  (pointermove)="onPointerMove($event, svg)"
+  (pointerleave)="hovered.set(null)"
+>
+  @for (line of gridlines(); track line.value) {
+    <line class="grid" [attr.x1]="margin.left" [attr.x2]="right()" [attr.y1]="line.y" [attr.y2]="line.y" />
+    <text class="axis-label" [attr.x]="margin.left - 8" [attr.y]="line.y" text-anchor="end" dominant-baseline="middle">
+      {{ line.value | number }}
+    </text>
+  }
+
+  @for (tick of hourTicks(); track tick.x) {
+    <line class="hour" [attr.x1]="tick.x" [attr.x2]="tick.x" [attr.y1]="margin.top" [attr.y2]="baseline" />
+    <text class="axis-label" [attr.x]="tick.x" [attr.y]="height - 8" text-anchor="middle">{{ tick.label }}</text>
+  }
+
+  <path class="band outer" [attr.d]="outerBand()" />
+  <path class="band inner" [attr.d]="innerBand()" />
+  <path class="median" [attr.d]="median()" />
+
+  @if (hoveredSlot(); as h) {
+    <line class="crosshair" [attr.x1]="h.x" [attr.x2]="h.x" [attr.y1]="margin.top" [attr.y2]="baseline" />
+    <circle class="marker" [attr.cx]="h.x" [attr.cy]="h.y" r="4" />
+  }
+</svg>
+
+@if (hoveredSlot(); as h) {
+  <div class="tooltip" [style.left.px]="h.left" [style.top.px]="margin.top + 36">
+    <div class="tooltip-title">{{ h.from }} – {{ h.to }}</div>
+    <dl>
+      <div><dt>Typical</dt><dd>{{ h.slot.p50 | number }}</dd></div>
+      <div><dt>Middle 50%</dt><dd>{{ h.slot.p25 | number }}–{{ h.slot.p75 | number }}</dd></div>
+      <div><dt>90% of days</dt><dd>{{ h.slot.p5 | number }}–{{ h.slot.p95 | number }}</dd></div>
+    </dl>
+  </div>
+}
+
+<table class="visually-hidden">
+  <caption>Steps per 10 minutes at each hour of a typical day</caption>
+  <thead>
+    <tr>
+      <th scope="col">Time</th>
+      <th scope="col">Typical</th>
+      <th scope="col">Middle 50% of days</th>
+      <th scope="col">90% of days</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (row of hourlyRows(); track row.minute) {
+      <tr>
+        <th scope="row">{{ row.label }}</th>
+        <td>{{ row.p50 | number }}</td>
+        <td>{{ row.p25 | number }} to {{ row.p75 | number }}</td>
+        <td>{{ row.p5 | number }} to {{ row.p95 | number }}</td>
+      </tr>
+    }
+  </tbody>
+</table>

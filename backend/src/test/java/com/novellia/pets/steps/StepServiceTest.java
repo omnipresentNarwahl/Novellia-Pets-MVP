@@ -11,6 +11,7 @@ import com.novellia.pets.pet.Species;
 import com.novellia.pets.steps.StepsResponse.DailySteps;
 import com.novellia.pets.support.Fixtures;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,53 @@ class StepServiceTest {
         assertThatThrownBy(() -> f.stepService.daily(UUID.randomUUID(), 30)).isInstanceOf(NotFoundException.class);
         assertThatThrownBy(() -> f.stepService.daily(rex.id(), 0)).isInstanceOf(ApiValidationException.class);
         assertThatThrownBy(() -> f.stepService.daily(rex.id(), 367)).isInstanceOf(ApiValidationException.class);
+    }
+
+    @Test
+    void profileTakesPercentilesPerTimeOfDayOverTheLastFourteenCompleteDays() {
+        // Day k back has every slot at k*10, so each slot pools three copies of 10, 20, ... 140.
+        for (int k = 1; k <= 14; k++) {
+            int[] slots = new int[StepRepository.SLOTS_PER_DAY];
+            Arrays.fill(slots, k * 10);
+            f.steps.saveDay(rex.id(), Fixtures.TODAY.minusDays(k), slots);
+        }
+        day(Fixtures.TODAY, 99_999);                  // today, still in progress: left out
+        day(Fixtures.TODAY.minusDays(15), 99_999);    // too old: left out
+
+        StepProfileResponse profile = f.stepService.profile(rex.id());
+
+        assertThat(profile.tracked()).isTrue();
+        assertThat(profile.days()).isEqualTo(14);
+        assertThat(profile.from()).isEqualTo(Fixtures.TODAY.minusDays(14));
+        assertThat(profile.to()).isEqualTo(Fixtures.TODAY.minusDays(1));
+        assertThat(profile.slots()).hasSize(StepRepository.SLOTS_PER_DAY);
+        assertThat(profile.slots()).allSatisfy(slot -> {
+            assertThat(slot.p25()).isEqualTo(40);
+            assertThat(slot.p50()).isEqualTo(75);
+            assertThat(slot.p75()).isEqualTo(110);
+        });
+        assertThat(profile.slots().get(87).minute()).isEqualTo(14 * 60 + 30);
+    }
+
+    @Test
+    void profileSmoothsAcrossNeighbouringSlotsAndAroundMidnight() {
+        int[] slots = new int[StepRepository.SLOTS_PER_DAY];
+        slots[StepRepository.SLOTS_PER_DAY - 1] = 300; // 23:50, next to 00:00
+        f.steps.saveDay(rex.id(), Fixtures.TODAY.minusDays(1), slots);
+
+        StepProfileResponse profile = f.stepService.profile(rex.id());
+
+        assertThat(profile.days()).isEqualTo(1);
+        assertThat(profile.slots().get(0).p95()).isPositive();
+        assertThat(profile.slots().get(142).p95()).isPositive();
+        assertThat(profile.slots().get(2).p95()).isZero();
+    }
+
+    @Test
+    void profileForAnUntrackedOrUnknownPet() {
+        assertThat(f.stepService.profile(rex.id()).tracked()).isFalse();
+        assertThat(f.stepService.profile(rex.id()).slots()).isEmpty();
+        assertThatThrownBy(() -> f.stepService.profile(UUID.randomUUID())).isInstanceOf(NotFoundException.class);
     }
 
     /** Saves a day whose slots add up to {@code total}. */
