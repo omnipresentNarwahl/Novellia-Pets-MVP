@@ -78,7 +78,7 @@ public class DemoDataLoader implements ApplicationRunner {
         steps(biscuit, StepGenerator.Profile.DOG, now, List.of());
         // Resting the sprained leg shows up as a dip in activity.
         steps(miso, StepGenerator.Profile.CAT, now,
-                List.of(new StepGenerator.Dip(today.minusDays(20), /* lowDays =*/ 8, /* recoveryDays=*/ 15, /* depth =*/ 0.6)));
+                List.of(new StepGenerator.Dip(today.minusDays(20), /* lowDays =*/ 8, /* recoveryDays=*/ 15, /* depth =*/ 0.8)));
 
         petService.create(new PetRequest("Pancake", Species.OTHER, "Axolotl", null, today.minusYears(1),
                 "Lives in a 20 gallon tank. Keep the water cool."));
