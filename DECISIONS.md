@@ -82,9 +82,9 @@ Step tracking is the extra feature the brief asks for.
 - Handle pets without a tracker and pets with a tracker but no recent data differently.
 - Add a database.
 - Add authentication.
-- Get the users timezones from the UI.
 - End-to-end testing to cover the smoke tests.
 - The application assumes the users will be looking at one pet at a time, if they want to do more with the records across all pets we could add search and filter functionality to the dashboard page.
+- Show the records in the step chart so it's easy to see how the two things fit together in the timeline.
 
 ## Authentication approach
 
