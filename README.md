@@ -10,6 +10,8 @@ Pets with an activity tracker also show their steps: a 7-day daily average on th
 
 See [DECISIONS.md](DECISIONS.md) for assumptions, trade-offs, known limitations and how authentication would be added.
 
+Demo: [Loom Video](https://www.loom.com/share/ba7e6e7d17874e3185a0f735dd1872b6)
+
 ## Quick start
 
 Prerequisite: Docker with Compose.
