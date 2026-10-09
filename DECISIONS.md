@@ -73,14 +73,18 @@ Step tracking is the extra feature the brief asks for.
 - **Angular 21, not 22.** The newest Angular CLI at the time of the build asked for a newer Node patch release than the build machine had, so the workspace uses the Angular 21 line, which supports Node 20.19+ and 22.12+. Moving to the newest release is an `ng update` away.
 - **`legacy-peer-deps` is set in `frontend/.npmrc`.** A clean `npm install` on the build machine hit an npm resolver bug, and the flag avoids it. It is committed so `npm ci` in Docker behaves the same.
 
-## Open questions
+## Possible additions
 
-- Should reminders and due dates be built next? They would add a due date to records and a "due soon" panel on the dashboard.
-- Which tracker platforms should step data come from, and how often would it sync? The `StepRepository` interface is where real data would arrive.
-- Should the dashboard tell "no tracker" apart from "tracker, but no data this week"?
-- Should data survive restarts? The JSON snapshot extra is small, needs a Docker volume, and changes no services.
-- Which time zone should the deployed server use?
-- Does a pet need a way to be archived instead of deleted, for example after it passes away, so the history is kept?
+- Reminders and due dates: Add a due date to records and a "due soon" panel on the dashboard.
+- Pet alerts: An alert icon on the pet cards and details page if the pet hasn't been to the vet in over a year or if there has been a recent sharp decrease in average steps.
+- Handling deceased pets with a flag rather than deleting so their records remain available.
+- Support attaching a tracker data source to a pet and retrieving the data. The `StepRepository` interface is where real data would arrive.
+- Handle pets without a tracker and pets with a tracker but no recent data differently.
+- Add a database.
+- Add authentication.
+- Get the users timezones from the UI.
+- End-to-end testing to cover the smoke tests.
+- The application assumes the users will be looking at one pet at a time, if they want to do more with the records across all pets we could add search and filter functionality to the dashboard page.
 
 ## Authentication approach
 
@@ -96,7 +100,3 @@ Steps to add it:
 4. In Angular, sign in with the authorization code flow and PKCE using an OIDC client library, keep tokens in memory, attach the access token in a functional interceptor, guard the routes, and send the user to sign-in on a 401.
 5. Add tests showing one owner cannot read, change or delete another owner's pets or records.
 6. For shared access (family members, a sitter, a vet), replace the single owner check with a membership table of pet, user and role, checked in the same place.
-
-## Earlier PostgreSQL plan
-
-The implementation plan mentions an earlier plan that used PostgreSQL. That plan and the "Decisions and Alternatives" companion document were not available when this was written, so their reasoning is not reproduced here. Add it from the companion document if you want this file to be self-contained. The repository interfaces are the seam where a database-backed implementation would plug in.
